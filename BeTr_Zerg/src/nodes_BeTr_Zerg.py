@@ -291,7 +291,7 @@ class selector_ling_attack_wave(BTZSelector):
     def decide(self):       
         if len(get_units_by_type(self,BTZN().blackboard["obs"], units.Zerg.Zergling)) < 10:
             self.decision = 0 # not enough lings train more
-            print(len(get_units_by_type(self,BTZN().blackboard["obs"], units.Zerg.Zergling)))
+            #print(len(get_units_by_type(self,BTZN().blackboard["obs"], units.Zerg.Zergling)))
         else:
             self.decision = 1 # send wave
     
