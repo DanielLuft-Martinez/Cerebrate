@@ -5,11 +5,11 @@ from absl import app
 import random
 
 
-class ZergAgent(base_agent.BaseAgent):
+class ZergGasAgent(base_agent.BaseAgent):
 
 
     def __init__(self):
-        super(ZergAgent, self).__init__()
+        super(ZergGasAgent, self).__init__()
         
         
         self.gas_harvesters = 0
@@ -46,7 +46,7 @@ class ZergAgent(base_agent.BaseAgent):
         gasX = []
         gasY = []
         
-        super(ZergAgent, self).step(obs)
+        super(ZergGasAgent, self).step(obs)
         
         if obs.first():
             player_y, player_x = (obs.observation.feature_minimap.player_relative == 
@@ -70,7 +70,7 @@ class ZergAgent(base_agent.BaseAgent):
 
             
             if xmean <= 31 and ymean <= 31:
-                self.attack_coordinates = (49, 49)
+                self.attack_coordinates = (49, 53)
 
                 
             else:
@@ -129,7 +129,7 @@ class ZergAgent(base_agent.BaseAgent):
             if self.unit_type_is_selected(obs, units.Zerg.Drone):
                 if (self.can_do(obs, actions.FUNCTIONS.Harvest_Gather_screen.id)):
                     self.gas_harvesters = self.gas_harvesters + 1
-                    print(self.gas_harvesters )
+                   # print(self.gas_harvesters )
                     return actions.FUNCTIONS.Harvest_Gather_screen("queued", (GHX.mean(), GHY.mean()))
                         
             drones = self.get_units_by_type(obs, units.Zerg.Drone)
@@ -168,7 +168,7 @@ class ZergAgent(base_agent.BaseAgent):
     
     
 def main(unused_argv):
-    agent = ZergAgent()
+    agent = ZergGasAgent()
     try:
         while True:
             with sc2_env.SC2Env(map_name="Catalyst", players=[sc2_env.Agent(sc2_env.Race.zerg), sc2_env.Bot(sc2_env.Race.random, sc2_env.Difficulty.very_easy)],

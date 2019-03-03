@@ -28,7 +28,7 @@ class BTZN:
         pass
     
     
-    def noop(self):
+    def printName(self):
         print(self.name)
 
     def __init__(self):
@@ -51,7 +51,7 @@ class BTZRoot(BTZN):
             list(map(lambda x:x.execute(),[BTZN().blackboard.get("current_sequence")]))
 
             
-    def noop(self):
+    def printName(self):
         print(self.name)
         
     def setup(self, obs):
@@ -70,7 +70,8 @@ class BTZRoot(BTZN):
                                "current_sequence" : self,
                                "obs" : None,
                                "action" : actions.FUNCTIONS.no_op(),
-                               "time" : 0
+                               "time" : 0,
+                               "base_top_left" : 0
                                })
         
 class BTZLeaf(BTZN):
@@ -113,9 +114,10 @@ class BTZSelector(BTZN):
     def execute(self):
         self.decide()
         if self.decision in range(0,len(self.children)):
+            #list(map(lambda x:x.printName(),[self.children[self.decision]]))
             list(map(lambda x:x.execute(),[self.children[self.decision]]))
         else:
-            self.noop()
+            self.printName()
         
     def decide(self):
         raise NotImplementedError
@@ -142,10 +144,12 @@ class BTZSequence(BTZN):
         if self.next_child == 0:
             self.setup()
         if self.next_child in range(0,len(self.children)-1):
+            #list(map(lambda x:x.printName(),[self.children[self.next_child]]))
             list(map(lambda x:x.execute(),[self.children[self.next_child]]))
             self.next_child+=1
         else:
             BTZN().blackboard["current_sequence"] = self.previous_sequence
+            #list(map(lambda x:x.printName(),[self.children[self.next_child]]))
             list(map(lambda x:x.execute(),[self.children[self.next_child]]))
             self.next_child = 0
             

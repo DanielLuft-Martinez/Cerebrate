@@ -1,17 +1,13 @@
 from pysc2.agents import base_agent
 from pysc2.env import sc2_env
+from pysc2.env.run_loop import run_loop
 from pysc2.lib import actions, features, units
 from absl import app
+import Zerg_Gas_Agent
 import BeTr_Zerg
 import nodes_BeTr_Zerg
 import random
-from nodes_BeTr_Zerg import leaf_select_drone_random, leaf_action_noop,\
-    decorator_step_obs, leaf_build_spawning_pool, selector_spawning_pool_exist,\
-    selector_can_build_spawning_pool, selector_supply, leaf_select_unit_random,\
-    leaf_train_overlord, leaf_train_drone, leaf_train_zergling, leaf_train_queen,\
-    selector_queen_upkeep, selector_build_phase, leaf_queen_inject_larva,\
-    decorator_phase, leaf_select_unit_all, selector_ling_attack_wave,\
-    leaf_attack, leaf_select_army
+from nodes_BeTr_Zerg import *
 from BeTr_Zerg import BTZSequence, BTZRoot
 
 
@@ -70,9 +66,13 @@ class ZergAgent(base_agent.BaseAgent):
             self.root.setup(obs)
             
             self.gas_harvesters = 0
+            self.root.write("opening", 1)
+            self.root.write("harvesters", 0)
+            
             
             if xmean <= 31 and ymean <= 31:
                 self.root.write("attack_coords", (49, 49))
+                self.root.write("base_top_left", 1)
             else:
                 self.root.write("attack_coords", (12, 16))
                 
@@ -83,6 +83,8 @@ class ZergAgent(base_agent.BaseAgent):
 
         
     def build_tree(self):
+        
+        """ Queen Ling open """
         get_drone = leaf_select_drone_random();
         nop = leaf_action_noop()
         bsp = leaf_build_spawning_pool()
@@ -96,10 +98,11 @@ class ZergAgent(base_agent.BaseAgent):
         
         queen_upkeep = BTZSequence([leaf_select_unit_random(units.Zerg.Queen),leaf_queen_inject_larva()])
         
+        shift_OL = selector_shift_overlord_cloud([leaf_shift_overlord_cloud(), nop ])
         
         trn_drn = BTZSequence([leaf_select_unit_random(units.Zerg.Larva),leaf_train_drone()])
         trn_ling = BTZSequence([leaf_select_unit_random(units.Zerg.Larva),leaf_train_zergling()])
-        trn_OL = BTZSequence([leaf_select_unit_random(units.Zerg.Larva),leaf_train_overlord()])
+        trn_OL = BTZSequence([leaf_select_unit_random(units.Zerg.Larva),leaf_train_overlord(), leaf_select_unit_all(units.Zerg.Overlord), shift_OL])
         trn_queen = BTZSequence([leaf_select_unit_random(units.Zerg.Hatchery),leaf_train_queen()])
         
         trn_ling_all = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_zergling()])
@@ -112,41 +115,66 @@ class ZergAgent(base_agent.BaseAgent):
         
         send = BTZSequence([leaf_select_army(),launch])
         
-        wave = selector_ling_attack_wave([selector_supply([trn_OL,trn_ling_all]),send])
+        wave = selector_supply([trn_OL, selector_ling_attack_wave([selector_supply([trn_OL,trn_ling_all]),send])])
         
         attack = selector_queen_upkeep([queen_upkeep,wave])
         
         build = selector_spawning_pool_exist([sp_seq,trn_queen])
         
-        opening = selector_build_phase([build, prep, attack])
+        opener_Qling = selector_build_phase([build, prep, attack])
         
-        phase = decorator_phase([opening])
+        phase_Qling = decorator_phase_queen_ling([opener_Qling])
+        
+        """ Queen Roach open """
+        trn_roach = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_roach(), leaf_train_roach(), leaf_train_roach()])
+ 
+        sup_up = selector_supply([trn_OL, trn_roach])
+        
+        attack_roach = BTZSequence([queen_upkeep,  selector_larva_to_roach([sup_up, send])])
+        
+        gas_harv = BTZSequence([get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas()])
+        
        
-        observe = decorator_step_obs([phase])
+        
+        q_up_seq = BTZSequence([queen_upkeep, selector_supply([trn_OL, trn_roach]), selector_supply([trn_OL, trn_roach]), selector_supply([trn_OL, trn_roach])])
+        
+        prep_roach = selector_count_gas_worker([gas_harv, q_up_seq])
+        
+        can_gas = leaf_build_extractor() #this may need redoing
+        gas = BTZSequence([get_drone,can_gas, selector_supply([trn_OL, trn_drn])])
+        queen_gas = BTZSequence([trn_queen, selector_supply([trn_OL, trn_drn])])
+        gas_queen = selector_gas_queen([gas, gas, queen_gas,selector_supply([trn_OL, trn_drn])])
+        rw_can = selector_can_build_roach_warren([leaf_build_roach_warren(),nop])
+        rw_seq = BTZSequence([get_drone,rw_can])
+    
+        
+        build_roach = selector_roach_warren_exist([selector_spawning_pool_exist([sp_seq, rw_seq]),  gas_queen])
+        
+        phase_roach = selector_roach_opening_phase([build_roach,prep_roach,attack_roach])
+        
+        
+        
+        decide_opening = selector_opening([phase_Qling,phase_roach])
+       
+        observe = decorator_step_obs([phase_roach])
         
         self.root = BTZRoot([observe])     
+       
     
     
 def main(unused_argv):
-    agent = ZergAgent()
+    agent1 = ZergAgent()
+    agent2 = Zerg_Gas_Agent.ZergGasAgent() # sc2_env.Bot(sc2_env.Race.random, sc2_env.Difficulty.very_easy)
     try:
-        while True:
-            with sc2_env.SC2Env(map_name="Catalyst", players=[sc2_env.Agent(sc2_env.Race.zerg), sc2_env.Bot(sc2_env.Race.random, sc2_env.Difficulty.very_easy)],
+        while True:# sc2_env.Agent(sc2_env.Race.zerg)
+            with sc2_env.SC2Env(map_name="Catalyst", players=[sc2_env.Agent(sc2_env.Race.zerg), sc2_env.Bot(sc2_env.Race.random, sc2_env.Difficulty.medium)],
                 agent_interface_format=features.AgentInterfaceFormat(feature_dimensions=features.Dimensions(screen=84, minimap=64),use_feature_units=True),
                       step_mul=16,
                       game_steps_per_episode=0,
-                      visualize=True) as env:
-                      
-                agent.setup(env.observation_spec(), env.action_spec())
+                      visualize=False) as env:
+                
+                run_loop([agent1], env)
                     
-                timesteps = env.reset()
-                agent.reset()
-                    
-                while True:
-                    step_actions = [agent.step(timesteps[0])]
-                    if timesteps[0].last():
-                        break
-                    timesteps = env.step(step_actions)
                   
     except KeyboardInterrupt:
         pass
