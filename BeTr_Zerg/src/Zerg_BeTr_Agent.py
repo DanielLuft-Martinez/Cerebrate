@@ -95,19 +95,22 @@ class ZergAgent(base_agent.BaseAgent):
         
         select_larva = leaf_select_unit_random(units.Zerg.Larva)
         
+        trn_queen = BTZSequence([leaf_select_unit_random(units.Zerg.Hatchery),leaf_train_queen()])
         
-        queen_upkeep = BTZSequence([leaf_select_unit_random(units.Zerg.Queen),leaf_queen_inject_larva()])
+        
+        queen_upkeep = selector_has_queen_upkeep([BTZSequence([leaf_select_unit_random(units.Zerg.Queen),leaf_queen_inject_larva()]), trn_queen])
         
         shift_OL = selector_shift_overlord_cloud([leaf_shift_overlord_cloud(), nop ])
         
         trn_drn = BTZSequence([leaf_select_unit_random(units.Zerg.Larva),leaf_train_drone()])
         trn_ling = BTZSequence([leaf_select_unit_random(units.Zerg.Larva),leaf_train_zergling()])
         trn_OL = BTZSequence([leaf_select_unit_random(units.Zerg.Larva),leaf_train_overlord(), leaf_select_unit_all(units.Zerg.Overlord), shift_OL])
-        trn_queen = BTZSequence([leaf_select_unit_random(units.Zerg.Hatchery),leaf_train_queen()])
-        
+       
         trn_ling_all = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_zergling()])
         
         #sply = selector_supply([trn_OL,])
+        drn_OL =  selector_supply([trn_OL, trn_drn])
+        
         
         prep = selector_queen_upkeep([queen_upkeep,selector_supply([trn_OL,trn_ling])])
         
@@ -126,24 +129,33 @@ class ZergAgent(base_agent.BaseAgent):
         phase_Qling = decorator_phase_queen_ling([opener_Qling])
         
         """ Queen Roach open """
-        trn_roach = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_roach(), leaf_train_roach(), leaf_train_roach()])
- 
-        sup_up = selector_supply([trn_OL, trn_roach])
+        set_wp = BTZSequence([leaf_select_unit_random(units.Zerg.Hatchery), leaf_simple_waypoint_close()])
         
-        attack_roach = BTZSequence([queen_upkeep,  selector_larva_to_roach([sup_up, send])])
+        trn_roach = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_roach()])
+        rch_OL = selector_supply([trn_OL, trn_roach])
+        trn_roach_many = BTZSequence([rch_OL,rch_OL,rch_OL,rch_OL,rch_OL,rch_OL])
+        trn_drn_many =  BTZSequence([drn_OL,drn_OL,drn_OL,drn_OL,drn_OL,drn_OL])
         
-        gas_harv = BTZSequence([get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas()])
+        sup_up = selector_supply([trn_OL, trn_roach_many])
         
-       
         
-        q_up_seq = BTZSequence([queen_upkeep, selector_supply([trn_OL, trn_roach]), selector_supply([trn_OL, trn_roach]), selector_supply([trn_OL, trn_roach])])
+        send_sweeps = BTZSequence([leaf_select_army(),leaf_attack_sweeps()])
+        sweeps = selector_sweeps([nop, send_sweeps])
+        
+        attack_roach = BTZSequence([queen_upkeep,  selector_larva_to_roach([sup_up, send]), sweeps])
+        
+        gas_harv = BTZSequence([get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(),trn_drn_many])
+        
+        
+        q_up_seq = BTZSequence([queen_upkeep, trn_roach_many,trn_roach_many])
         
         prep_roach = selector_count_gas_worker([gas_harv, q_up_seq])
         
         can_gas = leaf_build_extractor() #this may need redoing
-        gas = BTZSequence([get_drone,can_gas, selector_supply([trn_OL, trn_drn])])
-        queen_gas = BTZSequence([trn_queen, selector_supply([trn_OL, trn_drn])])
-        gas_queen = selector_gas_queen([gas, gas, queen_gas,selector_supply([trn_OL, trn_drn])])
+        gas = BTZSequence([get_drone,can_gas, drn_OL])
+       
+        queen_gas = BTZSequence([trn_queen, drn_OL])
+        gas_queen = BTZSequence([set_wp, selector_gas_queen([gas, gas, queen_gas,drn_OL]), drn_OL])
         rw_can = selector_can_build_roach_warren([leaf_build_roach_warren(),nop])
         rw_seq = BTZSequence([get_drone,rw_can])
     

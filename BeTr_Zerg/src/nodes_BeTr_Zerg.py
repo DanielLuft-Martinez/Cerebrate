@@ -92,7 +92,20 @@ class leaf_select_army(BTZLeaf):
         
     def __init__(self):
         self.name = self.name + " Select Army"
+        
+class leaf_simple_waypoint_close(BTZLeaf):
     
+    def execute(self):
+       # print("set waypoint: ")
+        hatchery_y, hatchery_x = ( BTZN().blackboard["obs"].observation['feature_screen'][features.SCREEN_FEATURES.unit_type.index] == units.Zerg.Hatchery).nonzero()
+        if  can_do(self,  actions.FUNCTIONS.Rally_Units_screen.id):
+            target = transformDistance(self, round(hatchery_x.mean()), 15, round(hatchery_y.mean()), -9)
+           # print("set waypoint: ", end = "")
+           # print(target)
+            BTZN().blackboard["action"] =  actions.FUNCTIONS.Rally_Units_screen("now", target)
+            
+    def __init__(self):
+        self.name = self.name + " Simple Waypoint"
     
 """ SPAWNING POOL SEQUENCE """
 
@@ -268,6 +281,18 @@ class selector_queen_upkeep(BTZSelector):
         self.children = decendant
         self.name = self.name + " Queen Upkeep"  
         
+class selector_has_queen_upkeep(BTZSelector):
+    
+    def decide(self):
+        if (len(get_units_by_type(self, units.Zerg.Queen))> 0):
+            self.decision = 0 # carry on
+        else:
+            self.decision = 1 #make queen
+                
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Has Queen Upkeep?"  
+        
 class leaf_queen_inject_larva(BTZLeaf):     
     
     def execute(self):
@@ -351,9 +376,9 @@ class leaf_shift_overlord_cloud(BTZLeaf):
         else:
             target = transformDistance(self, round(hatchery_x.mean()), -25, round(hatchery_y.mean()), -25)
         if(can_do(self, actions.FUNCTIONS.Move_screen.id)):
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Move_screen("now", target)
-        else:
-            BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Move_screen("queued", target)
+   #     else:
+   #         BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
         
         
     def __init__(self):
@@ -379,7 +404,7 @@ class selector_supply(BTZSelector):
     
     unit_type = 0
     def decide(self):
-        if BTZN().blackboard["free_supply"] == 0:
+        if BTZN().blackboard["free_supply"] <= 2:
             self.decision = 0 # no supply, build overlord
         else:
             self.decision = 1 # carry on
@@ -569,4 +594,30 @@ class selector_gas_queen(BTZSelector):
         self.children = decendant
         self.name = self.name + "Gas Queen"
     
+""" MORE MISC """
 
+
+class selector_sweeps(BTZSelector):
+    
+    
+    def decide(self):
+        if BTZN().blackboard["obs"].observation.player.food_used > 100:
+            self.decision = 1  #sweeps
+        else:
+            self.decision = 0 # nops
+            
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Sweeps"
+
+
+
+class leaf_attack_sweeps(BTZLeaf):
+    
+    def execute(self):
+        if  can_do(self,  actions.FUNCTIONS.Attack_minimap.id):
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Attack_minimap("now", (BTZN().blackboard["attack_coords"][0] + random.randint(-10,11),BTZN().blackboard["attack_coords"][1] + random.randint(-10,11)))
+        
+    def __init__(self):
+        self.name = self.name + " Attack Sweeps"
