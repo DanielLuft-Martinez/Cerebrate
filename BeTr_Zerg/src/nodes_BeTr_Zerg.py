@@ -593,6 +593,23 @@ class selector_gas_queen(BTZSelector):
     def __init__(self, decendant):
         self.children = decendant
         self.name = self.name + "Gas Queen"
+        
+class selector_worker_at_least(BTZSelector):
+    
+    def decide(self):
+        if(len(get_units_by_type(self, units.Zerg.Drone))<18):
+            self.decision = 1  #make drone
+        else:
+            self.decision = 0 # nops
+            
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Sweeps"
+
+           
+        
+        
     
 """ MORE MISC """
 

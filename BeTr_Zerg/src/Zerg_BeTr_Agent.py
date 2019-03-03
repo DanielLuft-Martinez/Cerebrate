@@ -143,11 +143,11 @@ class ZergAgent(base_agent.BaseAgent):
         sweeps = selector_sweeps([nop, send_sweeps])
         
         attack_roach = BTZSequence([queen_upkeep,  selector_larva_to_roach([sup_up, send]), sweeps])
+        drn_at_least = selector_worker_at_least([nop, trn_drn_many])
+        gas_harv = BTZSequence([get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(), drn_at_least])
         
-        gas_harv = BTZSequence([get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(),trn_drn_many])
         
-        
-        q_up_seq = BTZSequence([queen_upkeep, trn_roach_many,trn_roach_many])
+        q_up_seq = BTZSequence([queen_upkeep, trn_roach_many,trn_roach_many, drn_at_least])
         
         prep_roach = selector_count_gas_worker([gas_harv, q_up_seq])
         
