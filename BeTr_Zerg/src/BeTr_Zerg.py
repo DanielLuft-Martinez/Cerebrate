@@ -71,7 +71,8 @@ class BTZRoot(BTZN):
                                "obs" : None,
                                "action" : actions.FUNCTIONS.no_op(),
                                "time" : 0,
-                               "base_top_left" : 0
+                               "base_top_left" : 0,
+                               "hatcheries" : {}
                                })
         
 class BTZLeaf(BTZN):
@@ -115,11 +116,44 @@ class BTZSelector(BTZN):
         self.decide()
         if self.decision in range(0,len(self.children)):
             #list(map(lambda x:x.printName(),[self.children[self.decision]]))
+            
             list(map(lambda x:x.execute(),[self.children[self.decision]]))
+            
         else:
             self.printName()
         
     def decide(self):
+        raise NotImplementedError
+        
+    def __init__(self, decendant):
+        self.children = decendant
+        
+class BTZSmartSelector(BTZN):
+    
+    name = "Smart Selector"
+    
+    children = []
+    
+    decision = 0
+    
+    
+    def execute(self):
+        self.decide()
+        if self.decision in range(0,len(self.children)):
+            #list(map(lambda x:x.printName(),[self.children[self.decision]]))
+            
+            list(map(lambda x:x.execute(),[self.children[self.decision]]))
+            
+        else:
+            self.printName()
+        
+    def decide(self):
+        raise NotImplementedError
+    
+    def learn(self):
+        raise NotImplementedError
+    
+    def setup(self):
         raise NotImplementedError
         
     def __init__(self, decendant):

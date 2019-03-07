@@ -69,6 +69,8 @@ class ZergAgent(base_agent.BaseAgent):
             self.root.write("opening", 1)
             self.root.write("harvesters", 0)
             
+            self.root.write("hatcheries",{"main" : (xmean,ymean)})
+            
             
             if xmean <= 31 and ymean <= 31:
                 self.root.write("attack_coords", (49, 49))
@@ -85,7 +87,7 @@ class ZergAgent(base_agent.BaseAgent):
     def build_tree(self):
         
         """ Queen Ling open """
-        get_drone = leaf_select_drone_random();
+        get_drone = selector_idle_workers([leaf_select_drone_random(), leaf_select_idle_worker()]);
         nop = leaf_action_noop()
         bsp = leaf_build_spawning_pool()
         
@@ -144,6 +146,8 @@ class ZergAgent(base_agent.BaseAgent):
         
         attack_roach = BTZSequence([queen_upkeep,  selector_larva_to_roach([sup_up, send]), sweeps])
         drn_at_least = selector_worker_at_least([nop, trn_drn_many])
+        
+        
         gas_harv = BTZSequence([get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(),get_drone, leaf_extract_gas(), drn_at_least])
         
         
@@ -176,7 +180,7 @@ class ZergAgent(base_agent.BaseAgent):
     
 def main(unused_argv):
     agent1 = ZergAgent()
-    agent2 = Zerg_Gas_Agent.ZergGasAgent() # sc2_env.Bot(sc2_env.Race.random, sc2_env.Difficulty.very_easy)
+    #agent2 = Zerg_Gas_Agent.ZergGasAgent() # sc2_env.Bot(sc2_env.Race.random, sc2_env.Difficulty.very_easy)
     try:
         while True:# sc2_env.Agent(sc2_env.Race.zerg)
             with sc2_env.SC2Env(map_name="Catalyst", players=[sc2_env.Agent(sc2_env.Race.zerg), sc2_env.Bot(sc2_env.Race.random, sc2_env.Difficulty.medium)],

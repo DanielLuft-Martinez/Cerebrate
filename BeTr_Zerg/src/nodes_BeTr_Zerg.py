@@ -10,7 +10,6 @@ from absl import app
 import random
 
 from BeTr_Zerg import BTZLeaf, BTZSelector, BTZN, BTZDecorator
-from sqlalchemy.sql.expression import false
 
 """ HELPER FUNCTIONS """
 
@@ -97,9 +96,10 @@ class leaf_simple_waypoint_close(BTZLeaf):
     
     def execute(self):
        # print("set waypoint: ")
-        hatchery_y, hatchery_x = ( BTZN().blackboard["obs"].observation['feature_screen'][features.SCREEN_FEATURES.unit_type.index] == units.Zerg.Hatchery).nonzero()
+        #hatchery_y, hatchery_x = ( BTZN().blackboard["obs"].observation['feature_screen'][features.SCREEN_FEATURES.unit_type.index] == units.Zerg.Hatchery).nonzero()
+        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
         if  can_do(self,  actions.FUNCTIONS.Rally_Units_screen.id):
-            target = transformDistance(self, round(hatchery_x.mean()), 15, round(hatchery_y.mean()), -9)
+            target = transformDistance(self, round(hatch.x), 15, round(hatch.y), -9)
            # print("set waypoint: ", end = "")
            # print(target)
             BTZN().blackboard["action"] =  actions.FUNCTIONS.Rally_Units_screen("now", target)
@@ -129,7 +129,7 @@ class leaf_select_drone_random(BTZLeaf):
     def execute(self): #assume has drones
         if len(get_units_by_type(self, units.Zerg.Drone)) > 0:
             drone = random.choice(get_units_by_type(self, units.Zerg.Drone))
-            if drone.x >= 0 and drone.y >=0  :
+            if drone.x >= 0 and drone.y >=0 and drone.x <= 84 and drone.y <= 84 :
                 BTZN().blackboard["action"] = actions.FUNCTIONS.select_point("select", (drone.x,drone.y))
 
     
@@ -185,7 +185,7 @@ class leaf_select_unit_random(BTZLeaf):
         units = get_units_by_type(self, self.unit_type)
         if len(units) > 0 and (type(units) != None):
             unit = random.choice(units)
-            if unit.x >= 0 and unit.y >=0  :
+            if unit.x >= 0 and unit.y >=0 and unit.x <= 84 and unit.y <= 84:
                 BTZN().blackboard["action"] = actions.FUNCTIONS.select_point("select", (unit.x,unit.y))
         else:
             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
@@ -202,7 +202,7 @@ class leaf_select_unit_all(BTZLeaf):
         units = get_units_by_type(self, self.unit_type)
         if len(units) > 0 and (type(units) != None):
             unit = random.choice(units)
-            if unit.x >= 0 and unit.y >=0  :
+            if unit.x >= 0 and unit.y >=0 and unit.x <= 84 and unit.y <= 84:
                 BTZN().blackboard["action"] = actions.FUNCTIONS.select_point("select_all_type", (unit.x,unit.y))
         else:
             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
@@ -370,11 +370,12 @@ class leaf_shift_overlord_cloud(BTZLeaf):
    
     
     def execute(self):
-        hatchery_y, hatchery_x = ( BTZN().blackboard["obs"].observation['feature_screen'][features.SCREEN_FEATURES.unit_type.index] == units.Zerg.Hatchery).nonzero()
+        ##hatchery_y, hatchery_x = ( BTZN().blackboard["obs"].observation['feature_screen'][features.SCREEN_FEATURES.unit_type.index] == units.Zerg.Hatchery).nonzero()
+        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
         if len(get_units_by_type(self, units.Zerg.Overlord)) % 2 == 0:
-            target = transformDistance(self, round(hatchery_x.mean()), -35, round(hatchery_y.mean()), 0)
+            target = transformDistance(self, round(hatch.x), -35, round(hatch.y), 0)
         else:
-            target = transformDistance(self, round(hatchery_x.mean()), -25, round(hatchery_y.mean()), -25)
+            target = transformDistance(self, round(hatch.x), -25, round(hatch.y), -25)
         if(can_do(self, actions.FUNCTIONS.Move_screen.id)):
             BTZN().blackboard["action"] = actions.FUNCTIONS.Move_screen("queued", target)
    #     else:
@@ -494,7 +495,7 @@ class leaf_build_roach_warren(BTZLeaf):
         if can_do(self,  actions.FUNCTIONS.Build_RoachWarren_screen.id):
             BTZN().blackboard["action"] = actions.FUNCTIONS.Build_RoachWarren_screen("now", (x, y))
         else:
-             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
+            BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
     
     def __init__(self):
         self.name = self.name + " Build Roach Warren" 
@@ -638,3 +639,49 @@ class leaf_attack_sweeps(BTZLeaf):
         
     def __init__(self):
         self.name = self.name + " Attack Sweeps"
+        
+class selector_idle_workers(BTZSelector):
+    
+    def decide(self):
+        if (BTZN().blackboard["obs"].observation.player.idle_worker_count > 0):##idle workers
+            self.decision = 1
+        else:
+            self.decision = 0
+        
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Idle Workers"
+        
+class leaf_select_idle_worker(BTZLeaf):
+    
+    def execute(self):
+        if (can_do(self, actions.FUNCTIONS.select_idle_worker.id)):
+            BTZN().blackboard["action"] = actions.FUNCTIONS.select_idle_worker("select")
+            
+    def __init__(self):
+        self.name = self.name + " Select Idle Worker" 
+    
+       
+class selector_king_nn(BTZSelector):
+    
+    
+    def decide(self):
+        self.decision = BTZN().blackboard["Aspect"] 
+        
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " King Neural Network"
+        
+class selector_commander_nn(BTZSelector):
+    
+    
+    def decide(self):
+       ##atack location? 
+        self.decision = BTZN().blackboard["Aspect"]
+        
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Commander Neural Network"
