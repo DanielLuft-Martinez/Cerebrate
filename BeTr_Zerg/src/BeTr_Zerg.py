@@ -72,7 +72,8 @@ class BTZRoot(BTZN):
                                "action" : actions.FUNCTIONS.no_op(),
                                "time" : 0,
                                "base_top_left" : 0,
-                               "hatcheries" : {}
+                               "hatcheries" : {},
+                               "army_unit_counts" : {}, 
                                })
         
 class BTZLeaf(BTZN):

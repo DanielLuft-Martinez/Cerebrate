@@ -9,7 +9,7 @@ from pysc2.lib import actions, features, units
 from absl import app
 import random
 
-from BeTr_Zerg import BTZLeaf, BTZSelector, BTZN, BTZDecorator
+from BeTr_Zerg import *
 
 """ HELPER FUNCTIONS """
 
@@ -367,8 +367,6 @@ class selector_shift_overlord_cloud(BTZSelector):
         
 class leaf_shift_overlord_cloud(BTZLeaf):
     
-   
-    
     def execute(self):
         ##hatchery_y, hatchery_x = ( BTZN().blackboard["obs"].observation['feature_screen'][features.SCREEN_FEATURES.unit_type.index] == units.Zerg.Hatchery).nonzero()
         hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
@@ -377,7 +375,7 @@ class leaf_shift_overlord_cloud(BTZLeaf):
         else:
             target = transformDistance(self, round(hatch.x), -25, round(hatch.y), -25)
         if(can_do(self, actions.FUNCTIONS.Move_screen.id)):
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Move_screen("queued", target)
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Move_screen("now", target)
    #     else:
    #         BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
         
@@ -662,7 +660,54 @@ class leaf_select_idle_worker(BTZLeaf):
     def __init__(self):
         self.name = self.name + " Select Idle Worker" 
     
-       
+"""   NN INTEGREATION STUFF    """
+
+class selector_dummmy_king(BTZSelector):
+    
+    decree_time = 0
+    decree_count = 0
+    
+    def decide(self):
+        if self.decree_time >= 7:
+            self.decree_time = 0
+            
+            if self.decree_count < 10 :
+                self.decision = 0 #opening
+                self.decree_count += 1
+                
+                if BTZN().blackboard["Aspect"] != 0:
+                    BTZN().blackboard["swaspect"] = 1
+                    
+            elif self.decree_count % 2 == 0:
+                self.decision = 1 #build
+                
+                if BTZN().blackboard["Aspect"] != 1:
+                    BTZN().blackboard["swaspect"] = 1
+                    
+                BTZN().blackboard["Aspect"] = 1
+                self.decree_count = random.randint(10, 21)
+            else:
+                self.decision = 0 #econ
+                self.decree_count = random.randint(10, 21)
+                
+                if BTZN().blackboard["Aspect"] != 2:
+                    BTZN().blackboard["swaspect"] = 1
+                    
+                BTZN().blackboard["Aspect"] = 2
+                
+            
+        else:
+            self.decree_time += 1
+            BTZN().blackboard["swaspect"] = 0
+        ## currently the dummy king cannot attack 
+        ##     or scout
+        
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Dummy King"
+        
+
 class selector_king_nn(BTZSelector):
     
     
@@ -676,12 +721,107 @@ class selector_king_nn(BTZSelector):
         
 class selector_commander_nn(BTZSelector):
     
-    
     def decide(self):
        ##atack location? 
         self.decision = BTZN().blackboard["Aspect"]
-        
 
     def __init__(self, decendant):
         self.children = decendant
         self.name = self.name + " Commander Neural Network"
+        
+
+class selector_cam_new_aspect(BTZSelector):
+    
+    
+    def decide(self):
+
+            self.decision = BTZN().blackboard["swaspect"] 
+            ## 0  ->  carry on
+            ## 1  ->  move camera -- maybe other stuff too
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Cam New Aspect"
+        
+
+
+        
+"""   BUILD TREE UTILITIES   """
+
+class selector_build_decision(BTZSelector):
+    
+    def decide(self):
+        self.decision = BTZN().blackboard["Build"] 
+        ## 0 is Ling Muta
+        ## 1 is Roach Hydra
+        ## 2 is Muta Ruptor
+        
+        ## 3 is Broodlord Coruptor*
+        ## 4 is Ultra Roach*S
+        
+        ## what information should be recieved to swap? -- up to recon? 
+        
+        ## no-information: random choice is fine -- should only have this choice happen once
+        ## discovered: enemey has lots of anti ground -- Muta Ruptor
+        ## discovered: enemey has lots of anti air -- Roach Hydra
+        ## discovered: enemey has lots of anti ground -- muta ruptor
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Build Decision"
+    
+class selector_build_progression_alternator(BTZSelector):
+
+    def decide(self):
+        self.decision = BTZN().blackboard["Build"] 
+        ## 0 is Tech Buildings
+            ## coords are gonna be important
+        ## 1 is Upgrades
+            ## this can serve as a check for making sure the buildings exist
+            ## "check off" upgrades in aropriate BB slot    
+        ## 2 is Production
+            ## although this is the branch that should be run the most 
+            ## it may have some of the lowest priority?
+            ## cylcle bases, produce units
+            
+        ## what information should be recieved to swap?
+        
+        ## if we have yet to build necesarry buildings  -- tech
+        ## if we move screen to coords of specfic tech building and find it not to exist -- tech
+        ## upgrades as necesaryy?
+        ## possibly a 3 - 1 - 1 split to start
+        ## then when build is done  1 - 2 - 7
+        ## then when upgrades done  1 - 0 - 9 maybe higher?
+        
+        
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Build Progression Alternator"        
+
+class selector_production_ratio_controller(BTZSelector):
+    
+    
+    unit_type_one = None
+    unit_type_two = None
+    unit_ratio = 1
+    
+    def decide(self):
+        if (BTZN().blackboard["army_unit_counts"][self.unit_type_one]/(BTZN().blackboard["army_unit_counts"][self.unit_type_two] + 1)  <= self.unit_ratio):
+            self.decision = 0 ## produce unit type one
+        else:
+            self.decision = 1 ## produce unit type two
+
+        
+
+    def __init__(self, decendant, unit_type_one, unit_type_two, unit_ratio):
+        self.children = decendant
+        self.unit_type_one = unit_type_one
+        self.unit_type_two = unit_type_two
+        self.unit_ratio = unit_ratio
+        self.name = self.name + " Production Ratio Controller"
+    
+    
+    
+    
+    
