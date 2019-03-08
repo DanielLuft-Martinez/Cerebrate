@@ -10,8 +10,12 @@ from collections import deque
 import tensorflow as tf
 from keras.models import Sequential
 from keras.layers import Dense
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, SGD
 from pysc2.RL_algos.RL_Model import RLModel
+
+import Alpha_Zero as AZ
+import keras
+import keras.layers
 
 EPISODES = 1000
 
@@ -29,10 +33,26 @@ class DQNModel(RLModel):
         self.batch_size = 32  # takes batch sizes of 32 for learning
         self.learning_rate = 0.001  # for gradient descent
         self.tau = 0.125  # for learning new model
-        self.model = self._build_model(hidden_layers)
-        self.target_model = self._build_model(hidden_layers)
+
+        self.model = self._build_AZ_model(10)
+        self.target_model = self._build_AZ_model(10)
+
         self.target_train(copy=True)
 
+    def _build_AZ_model(self, no_of_residual_layers):
+        main_input = keras.layers.Input(shape=self.state_size)
+
+        x = AZ.add_convolutional_layer(main_input)
+
+        for _ in range(no_of_residual_layers):
+            x = AZ.add_residual_layer(x)
+
+        vh = AZ.value_head(x)
+
+        model = keras.Model(inputs=[main_input], outputs=vh)
+        model.compile(loss='mean_squared_error', optimizer=SGD(lr=self.learning_rate))
+
+        return model
 
     def _build_model(self, hidden_layers):
 
@@ -41,7 +61,6 @@ class DQNModel(RLModel):
             return tf.losses.huber_loss(y_true, y_pred)
 
         # Neural Net for Deep-Q learning Model
-
         model = Sequential()
         model.add(Dense(hidden_layers[0], input_dim=self.state_size, activation='relu'))
         for hns in hidden_layers[1:-1]:
@@ -66,6 +85,7 @@ class DQNModel(RLModel):
         self.memory.append((state, action, reward, next_state, done))
         self._replay()
 
+    # take a random mini batch of State-Action-Reward pairs and train on them.
     def _replay(self):
         if len(self.memory) < self.batch_size:
             return

@@ -3,6 +3,8 @@ Created on Feb 11, 2019
 
 @author: Daniel
 '''
+
+
 class BeTrNode:
     '''
     classdocs
@@ -28,6 +30,8 @@ class BeTrNode:
         '''
         Constructor
         '''
+
+
 class BeTrRoot(BeTrNode):
     
     name = "Root"
@@ -50,7 +54,8 @@ class BeTrRoot(BeTrNode):
         BeTrNode().blackboard.update({"root" : self,
                                "current_node" : self,
                                "current_sequence" : self})
-        
+
+
 class BeTrLeaf(BeTrNode):
     
     name = "Leaf"
@@ -63,7 +68,8 @@ class BeTrLeaf(BeTrNode):
     
     def __init__(self):
         pass
-    
+
+
 class BeTrDeco(BeTrNode):
     
     name = "Decorator"
@@ -77,8 +83,7 @@ class BeTrDeco(BeTrNode):
     def __init__(self, decendant):
         self.children = decendant
     
-    
-        
+
 class BeTrSelector(BeTrNode):
     
     name = "Selector"
@@ -130,7 +135,3 @@ class BeTrSequence(BeTrNode):
         
     def __init__(self, decendant):
         self.children = decendant
-        
-    
-    
-    

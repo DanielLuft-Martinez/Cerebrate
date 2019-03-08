@@ -35,7 +35,7 @@ def main():
     root = BeTrRoot([sel])
     
     for i in range(0,100):
-        print(i,end = ": ")
+        print(i,end=":")
         root.execute()
    
  

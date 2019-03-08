@@ -10,8 +10,7 @@ from pysc2.agents import base_agent
 from pysc2.lib import actions
 from pysc2.lib import features
 
-from pysc2.RL_algos.QLearningTable import QLearningTable
-from pysc2.RL_algos.DQN import DQNModel
+from pysc2.RL_algoss.DQN import DQNModel
 
 _NO_OP = actions.FUNCTIONS.no_op.id
 _SELECT_POINT = actions.FUNCTIONS.select_point.id
@@ -68,6 +67,7 @@ class SparseAgent(base_agent.BaseAgent):
 
         #self.qlearn = QLearningTable(actions=list(range(len(smart_actions))), data_file=DATA_FILE)  # switching to DQN
         self.qlearn = DQNModel(state_size=len(np.zeros(12)), action_size=len(smart_actions))
+
         self.qlearn.load_model(DATA_FILE)
 
         self.previous_action = None

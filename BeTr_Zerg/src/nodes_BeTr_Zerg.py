@@ -298,7 +298,6 @@ class selector_ling_attack_wave(BTZSelector):
     def __init__(self, decendant):
         self.children = decendant
         self.name = self.name + " Wave Attack"
-        
 
 
 class selector_supply(BTZSelector):

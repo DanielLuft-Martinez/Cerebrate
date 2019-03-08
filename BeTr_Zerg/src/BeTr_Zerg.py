@@ -8,8 +8,6 @@ Created on Feb 11, 2019
 from pysc2.lib import actions
 
 
-
-
 class BTZN:
     '''
     classdocs
