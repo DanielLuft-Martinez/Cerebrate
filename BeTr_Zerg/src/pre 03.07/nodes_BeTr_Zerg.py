@@ -11,7 +11,6 @@ import random
 
 from BeTr_Zerg import *
 
-
 """ HELPER FUNCTIONS """
 
 def unit_type_is_selected(self, unit_type):
@@ -24,21 +23,9 @@ def unit_type_is_selected(self, unit_type):
     
     return False
 
-def _get_units_by_type(self,  unit_type):#use ONLY for htac,lair,hive check
-    obs =  BTZN().blackboard["obs"]
-        
-    return [unit for unit in obs.observation.feature_units
-            if unit.unit_type == unit_type]
-
 
 def get_units_by_type(self,  unit_type):
     obs =  BTZN().blackboard["obs"]
-    if unit_type == units.Zerg.Hatchery:
-        if (len(_get_units_by_type(self, units.Zerg.Lair)) > 0):
-            unit_type = units.Zerg.Lair
-        elif (len(_get_units_by_type(self, units.Zerg.Hive)) > 0):
-            unit_type = units.Zerg.Hive
-        
     return [unit for unit in obs.observation.feature_units
             if unit.unit_type == unit_type]
 
@@ -58,12 +45,7 @@ def transformLocation(self, x, y):
             return [64 - x, 64 - y]
 
         return [x, y]
-def tech_check(self, unit_type, name):
-    if(len(get_units_by_type(self,unit_type))>0):
-        unit = random.choice(get_units_by_type(self, unit_type))
-        BTZN().blackboard["tech_buildings"][name] = (unit.x,unit.y)
-        
-    
+
 """ MISC NODES """
 
 class decorator_step_obs(BTZDecorator):
@@ -72,16 +54,6 @@ class decorator_step_obs(BTZDecorator):
     def execute(self):
         BTZN().blackboard["free_supply"] = (BTZN().blackboard["obs"].observation.player.food_cap -
                                              BTZN().blackboard["obs"].observation.player.food_used)
-        ##tech obs
-        tech_check(self, units.Zerg.SpawningPool, "spawning_pool")
-        tech_check(self, units.Zerg.RoachWarren, "roach_warren")
-        tech_check(self, units.Zerg.Lair, "lair")
-        tech_check(self, units.Zerg.EvolutionChamber, "evolution_chamber")
-        tech_check(self, units.Zerg.Spire, "spire")
-        tech_check(self, units.Zerg.HydraliskDen, "hydralisk_den")
-        
-        
-        
         BTZDecorator.execute(self)
     
     def __init__(self, decendant):
@@ -143,6 +115,7 @@ class selector_spawning_pool_exist(BTZSelector):
         
         if len(get_units_by_type(self, units.Zerg.SpawningPool)) == 0:
             self.decision = 0 #does not have sp - 0 is build sp sequence
+            self.spawning_pools = [1]
         else:
             self.decision = 1 #does have - 1 is other actions
     
@@ -188,98 +161,7 @@ class leaf_build_spawning_pool(BTZLeaf):
     def __init__(self):
         self.name = self.name + " Build Spawning Pool" 
         
-""" build tech """
-
-class selector_can_build_evolution_chamber(BTZSelector):
-    
-    def decide(self):
-        if can_do(self,  actions.FUNCTIONS.Build_EvolutionChamber_screen.id):
-            self.decision = 0 # it is a possible action - 0 is procede with building it
-        else:
-            self.decision = 1 # cant, so NOOP
-    
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Can Build Evolution Chamber?"
         
-class leaf_build_evolution_chamber(BTZLeaf):
-    
-    def execute(self):
-        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-        target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
-        BTZN().blackboard["action"] = actions.FUNCTIONS.Build_EvolutionChamber_screen("now", target)
-        
-    def __init__(self):
-        self.name = self.name + " Build Evolution Chamber" 
-        
-class selector_can_build_spire(BTZSelector):
-    
-    def decide(self):
-        if can_do(self,  actions.FUNCTIONS.Build_Spire_screen.id):
-            self.decision = 0 # it is a possible action - 0 is procede with building it
-        else:
-            self.decision = 1 # cant, so NOOP
-    
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Can Build Spire?"
-        
-class leaf_build_spire(BTZLeaf):
-    
-    def execute(self):
-        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-        target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
-        BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Spire_screen("now", target)
-        
-    def __init__(self):
-        self.name = self.name + " Build Spire" 
-
-class selector_can_build_hydralisk_den(BTZSelector):
-    
-    def decide(self):
-        if can_do(self,  actions.FUNCTIONS.Build_HydraliskDen_screen.id):
-            self.decision = 0 # it is a possible action - 0 is procede with building it
-        else:
-            self.decision = 1 # cant, so NOOP
-    
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Can Build Hydralisk Den?"
-        
-class leaf_build_hydralisk_den(BTZLeaf):
-    
-    def execute(self):
-        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-        target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
-        BTZN().blackboard["action"] = actions.FUNCTIONS.Build_HydraliskDen_screen("now", target)
-        
-    def __init__(self):
-        self.name = self.name + " Build Hydralisk Den" 
-
-class selector_can_morph_lair(BTZSelector):
-    
-    def decide(self):
-        if can_do(self,  actions.FUNCTIONS.Morph_Lair_quick.id):
-            self.decision = 0 # it is a possible action - 0 is procede with building it
-        else:
-            self.decision = 1 # cant, so NOOP
-    
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Can Morph Lair"
-        
-           
-class leaf_morph_lair(BTZLeaf):
-    
-    def execute(self):
-        
-        BTZN().blackboard["action"] = actions.FUNCTIONS.Morph_Lair_quick("now")
-        BTZN().blackboard["upgrades"]["lair"] = 1
-    
-    def __init__(self):
-        self.name = self.name + " Morph Lair"
-
-
 """ MAKE 'UNIT' SEQUENCE """
 
 class selector_select_unit(BTZSelector):
@@ -506,14 +388,7 @@ class selector_opening(BTZSelector):
     
     def decide(self):
         self.decsion = BTZN().blackboard["opening"]
-        if BTZN().blackboard["opening"] == 1:
-            #print("ROACH OPEN")
-            self.decision = 1
-        else:
-            #print("LING OPEN")
-            self.decision = 0
-        # 0 -> LINGS
-        # 1 -> ROACH
+        
         
     def __init__(self, decendant):
         self.children = decendant
@@ -537,66 +412,56 @@ class selector_supply(BTZSelector):
         self.children = decendant
         self.name = self.name + " Free Supply"
         
-"""   Ling Opening SEQUENCE    """
+        
+""" Roach Warren SEQUENCE """
 
-class selector_zergling_opening_phase(BTZSelector):
-    done = False
-    def decide(self):#build
-       # print("Zergling Open") ## nop and 
-        if self.done :
-            self.decision = 2 # DONE
-            #print("Zergling Open Done") ## nop and 
-        elif (len(get_units_by_type(self, units.Zerg.SpawningPool)) >= 1  
-            and len(get_units_by_type(self, units.Zerg.Extractor)) > 1 
-            and len(get_units_by_type(self, units.Zerg.Queen)) >= 1 
-            and not self.done ):
-            self.decision = 1 #prep
-            #print("PREP")
-            #print("PREP")
-            if len(get_units_by_type(self, units.Zerg.Zergling)) > 10:
-                self.done =True
-        #else:
-            #print("build up")
-        
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Zergling Opening Phase"
-
-     
-        
-""" Roach Warren opening SEQUENCE """
-
-        
-        
 class selector_roach_opening_phase(BTZSelector):
-    done = False
+    attacking = False
     def decide(self):#build
-       # print("Zergling Open") ## nop and 
-        if self.done :
-            self.decision = 2 # DONE
-            #print("Zergling Open Done") ## nop and 
+        if self.attacking :
+            self.decision = 2 #attack
+            #print("ATTACK")
         elif (len(get_units_by_type(self, units.Zerg.RoachWarren)) >= 1  
             and len(get_units_by_type(self, units.Zerg.Extractor)) > 1 
             and len(get_units_by_type(self, units.Zerg.Queen)) >= 1 
-            and not self.done ):
+            and not self.attacking ):
             self.decision = 1 #prep
             #print("PREP")
             #print("PREP")
-            if len(get_units_by_type(self, units.Zerg.Roach)) > 5:
-                self.done =True
-        #else:
-            #print("build up")
+            if len(get_units_by_type(self, units.Zerg.Roach))>2:
+                self.attacking =True
+            
         
     def __init__(self, decendant):
         self.children = decendant
         self.name = self.name + " Roach Opening Phase"
+        
+class selector_roach_opening_build(BTZSelector):
+    
+    def decide(self):
+        if (len(get_units_by_type(self, units.Zerg.RoachWarren)) <= 0  
+            and len(get_units_by_type(self, units.Zerg.Extractor)) <= 0 
+            and len(get_units_by_type(self, units.Zerg.Queen)) <= 0) :
+            self.decision = 0 #build
+            #print("BUILD")
+        elif len(get_units_by_type(self, units.Zerg.Roach)) < 5:
+            self.decision = 1 #prep
+           # print("PREP")
+        else:
+            self.decision = 2 #attack
+            #print("ATTACK")
+        
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Roach Opening Build"
 
 class selector_roach_warren_exist(BTZSelector):
     
     def decide(self):
         
-        if len(get_units_by_type(self, units.Zerg.RoachWarren)) <= 0:
+        if len(get_units_by_type(self, units.Zerg.RoachWarren)) == 0:
             self.decision = 0 #does not have sp - 0 is build sp sequence
+            self.roach_warrens = [1]
         else:
             self.decision = 1 #does have - 1 is other actions
     
@@ -719,8 +584,7 @@ class selector_gas_queen(BTZSelector):
                 self.gas2 = True
         elif not self.queen:
             self.decision = 2
-            if (len(get_units_by_type(self, units.Zerg.Queen) ) > 0):
-                self.queen = True
+            self.queen = True
         else:
             self.decision = 3
             
@@ -806,20 +670,19 @@ class selector_dummmy_king(BTZSelector):
     def decide(self):
         if self.decree_time >= 7:
             self.decree_time = 0
-            #print("Decree count = ", end = "")
-            print(self.decree_count)
-            if self.decree_count < 7 :
+            
+            if self.decree_count < 10 :
                 self.decision = 0 #opening
                 self.decree_count += 1
                 
                 if BTZN().blackboard["Aspect"] != 0:
-                    BTZN().blackboard["switching_aspect"] = 1
+                    BTZN().blackboard["swaspect"] = 1
                     
             elif self.decree_count % 2 == 0:
                 self.decision = 1 #build
                 
                 if BTZN().blackboard["Aspect"] != 1:
-                    BTZN().blackboard["switching_aspect"] = 1
+                    BTZN().blackboard["swaspect"] = 1
                     
                 BTZN().blackboard["Aspect"] = 1
                 self.decree_count = random.randint(10, 21)
@@ -828,16 +691,14 @@ class selector_dummmy_king(BTZSelector):
                 self.decree_count = random.randint(10, 21)
                 
                 if BTZN().blackboard["Aspect"] != 2:
-                    BTZN().blackboard["switching_aspect"] = 1
+                    BTZN().blackboard["swaspect"] = 1
                     
                 BTZN().blackboard["Aspect"] = 2
-        
-            print("Aspect = ", end = "")
-            print( BTZN().blackboard["Aspect"])
-               
+                
+            
         else:
             self.decree_time += 1
-            BTZN().blackboard["switching_aspect"] = 0
+            BTZN().blackboard["swaspect"] = 0
         ## currently the dummy king cannot attack 
         ##     or scout
         
@@ -874,7 +735,7 @@ class selector_cam_new_aspect(BTZSelector):
     
     def decide(self):
 
-            self.decision = BTZN().blackboard["switching_aspect"] 
+            self.decision = BTZN().blackboard["swaspect"] 
             ## 0  ->  carry on
             ## 1  ->  move camera -- maybe other stuff too
 
@@ -882,44 +743,21 @@ class selector_cam_new_aspect(BTZSelector):
         self.children = decendant
         self.name = self.name + " Cam New Aspect"
         
-class leaf_cam_aspect(BTZLeaf):
-    
-    def execute(self):
-        print("Aspect = ", end = "")
-        print( BTZN().blackboard["Aspect"])
-        BTZN().blackboard["Action"] = actions.FUNCTIONS.no_op()
-        ## move camera to location:
-            ## coords = BTZN().blackboard["aspect_cam_coords"][BTZN().blackboard["Aspect"]]
-                ## should be a tuple -- and assigned maybe at obs time? aspect switch time?
-        
-        BTZLeaf.execute(self)
-    def __init__(self):
-        self.name = self.name + " Cam Aspect"
+
+
         
 """   BUILD TREE UTILITIES   """
 
 class selector_build_decision(BTZSelector):
     
     def decide(self):
-        self.decision = BTZN().blackboard["build"] 
-        
-        if BTZN().blackboard["build"] == 0 :
-            print("LING MUTA")
-            
-        elif BTZN().blackboard["build"] == 1 :
-            print("ROACH HYDRA")
-            
-        elif BTZN().blackboard["build"] == 2 :
-            print("MUTA RUPTOR")
-        else:
-            ##not possible
-            print("not possible")
+        self.decision = BTZN().blackboard["Build"] 
         ## 0 is Ling Muta
         ## 1 is Roach Hydra
         ## 2 is Muta Ruptor
         
         ## 3 is Broodlord Coruptor*
-        ## 4 is Ultra Roach*
+        ## 4 is Ultra Roach*S
         
         ## what information should be recieved to swap? -- up to recon? 
         
@@ -932,44 +770,10 @@ class selector_build_decision(BTZSelector):
         self.children = decendant
         self.name = self.name + " Build Decision"
     
-class selector_build_progression(BTZSelector):
+class selector_build_progression_alternator(BTZSelector):
 
-
-    alternator = 0
-    split = [3,1,1]
-    tech_done = 0
-    upgrades_done = 0
-    
     def decide(self):
-        build = BTZN().blackboard["build"]
-        #print(self.alternator)
-        print(self.split)
-        self.tech_done = BTZN().blackboard["tech_done"][build]
-        self.upgrades_done = BTZN().blackboard["upgrades_done"][build]
-        
-        if BTZN().blackboard["alternator"] == 1:
-            BTZN().blackboard["alternator"]= 0
-            
-            if BTZN().blackboard["phase"] < self.split[0]:
-                self.decision = 0 #tech
-            elif BTZN().blackboard["phase"] <= self.split[1]+self.split[0]:
-                self.decision = 1 #upgrades
-            elif BTZN().blackboard["phase"] <= sum(self.split):
-                self.decision = 2
-            else:
-                BTZN().blackboard["phase"] = 0
-                
-        
-        
-        if not self.upgrades_done and self.tech_done:
-            self.split = [0,3,7]
-        elif self.upgrades_done and not self.tech_done:
-            self.split = [3,0,2]
-        elif self.upgrades_done and self.tech_done:
-            self.split = [1,0,19]
-        else:
-            self.split = [3,1,1]
-        
+        self.decision = BTZN().blackboard["Build"] 
         ## 0 is Tech Buildings
             ## coords are gonna be important
         ## 1 is Upgrades
@@ -986,212 +790,14 @@ class selector_build_progression(BTZSelector):
         ## if we move screen to coords of specfic tech building and find it not to exist -- tech
         ## upgrades as necesaryy?
         ## possibly a 3 - 1 - 1 split to start
-        ## then when build is done  0 - 3 - 7
-        ## then when upgrades done  1 - 0 - 19 maybe higher?
+        ## then when build is done  1 - 2 - 7
+        ## then when upgrades done  1 - 0 - 9 maybe higher?
         
         
 
     def __init__(self, decendant):
         self.children = decendant
         self.name = self.name + " Build Progression Alternator"        
-
-
-
-class selector_tech_progression_LM(BTZSelector):
-    
-    ##sp
-    ##evo
-    ##lair
-    ##spire
-    
-    def decide(self):
-        if BTZN().blackboard["tech_buildings"]["spawning_pool"][0] == None:
-            self.decision = 0
-            BTZN().blackboard["tech_done"][0] = 0
-        elif BTZN().blackboard["tech_buildings"]["evolution_chamber"][0] == None:
-            self.decision = 1
-            BTZN().blackboard["tech_done"][0] = 0
-        elif BTZN().blackboard["upgrades"]["lair"] == 0:
-            self.decision = 2
-            BTZN().blackboard["tech_done"][0] = 0
-        elif BTZN().blackboard["tech_buildings"]["spire"][0] == None:
-            self.decision = 3
-            BTZN().blackboard["tech_done"][0] = 0
-        else:
-            self.decision = 4 ## check or nop for now
-            BTZN().blackboard["tech_done"][0] = 1
-            
-        
-
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Tech Progression Ling Muta"        
-
-class selector_tech_progression_RH(BTZSelector):
-    
-    ##sp
-    ##rw
-    ##evo
-    ##lair
-    ##hd
-    
-    def decide(self):
-        if BTZN().blackboard["tech_buildings"]["spawning_pool"][0] == None:
-            self.decision = 0
-            BTZN().blackboard["tech_done"][1] = 0
-        elif BTZN().blackboard["tech_buildings"]["roach_warren"][0] == None:
-            self.decision = 1
-            BTZN().blackboard["tech_done"][1] = 0
-        elif BTZN().blackboard["upgrades"]["lair"] == 0:
-            self.decision = 2
-            BTZN().blackboard["tech_done"][1] = 0
-        elif BTZN().blackboard["tech_buildings"]["evolution_chamber"][0] == None:
-            self.decision = 3
-            BTZN().blackboard["tech_done"][1] = 0
-        elif BTZN().blackboard["tech_buildings"]["hydralisk_den"][0] == None:
-            self.decision = 4
-            BTZN().blackboard["tech_done"][1] = 0
-        else:
-            self.decision = 5 ## check
-            BTZN().blackboard["tech_done"][1] = 1
-            
-        
-
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Tech Progression Roach Hydra"   
-
-class selector_tech_progression_MR(BTZSelector):
-    
-    ##sp
-    ##lair
-    ##spire
-    ##spire2
-    
-    def decide(self):
-        if BTZN().blackboard["tech_buildings"]["spawning_pool"][0] == None:
-            self.decision = 0
-            BTZN().blackboard["tech_done"][2] = 0
-        elif BTZN().blackboard["tech_buildings"]["lair"][0] == None:
-            self.decision = 1
-            BTZN().blackboard["tech_done"][2] = 0
-        elif BTZN().blackboard["tech_buildings"]["spire"][0] == None:
-            self.decision = 2
-            BTZN().blackboard["tech_done"][2] = 0
-        else:
-            self.decision = 3 ## check
-            BTZN().blackboard["tech_done"][2] = 1
-            
-        
-
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Tech Progression Muta Ruptor"   
-
-class selector_upgrade_progression_LM(BTZSelector):
-    
-    ##mb
-    ##ga1
-    ##aa1
-    ##ga2
-    ##aa2
-    ##gm1
-    ##ar1
-    ##gm2
-    ##ar2
-    
-    def decide(self):
-        if (BTZN().blackboard["upgrades"]["metabolic_boost"] != 1
-        and BTZN().blackboard["upgrades"]["metabolic_boost"] != -1):
-            self.decision = 0
-        elif (BTZN().blackboard["upgrades"]["ground_armor"] != 2 
-        and BTZN().blackboard["upgrades"]["ground_armor"] != -1):
-            self.decision = 1
-        elif (BTZN().blackboard["upgrades"]["air_armor"] != 2
-        and BTZN().blackboard["upgrades"]["air_armor"] != -1):
-            self.decision = 2
-        elif (BTZN().blackboard["upgrades"]["ground_melee"] != 2
-        and BTZN().blackboard["upgrades"]["ground_melee"] != -1):
-            self.decision = 3
-        elif (BTZN().blackboard["upgrades"]["air_ranged"] != 2
-        and BTZN().blackboard["upgrades"]["air_ranged"] != -1):
-            self.decision = 4
-        elif (BTZN().blackboard["upgrades"]["metabolic_boost"] == 1
-        and BTZN().blackboard["upgrades"]["ground_armor"] == 2
-        and BTZN().blackboard["upgrades"]["air_armor"] == 2
-        and BTZN().blackboard["upgrades"]["ground_melee"] == 2
-        and BTZN().blackboard["upgrades"]["air_ranged"] == 2):
-            self.decision = 5 ## check
-            BTZN().blackboard["upgrades_done"][0] = 1
-        
-
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Upgrade Progression Ling Muta"        
-
-class selector_upgrade_progression_RH(BTZSelector):
-    
-    ##ma
-    ##gs
-    ##gr1
-    ##gr2
-    ##ga1
-    ##ga2
-    
-    def decide(self):
-        if (BTZN().blackboard["upgrades"]["muscular_augments"] != 1
-        and BTZN().blackboard["upgrades"]["muscular_augments"] != -1):
-            self.decision = 0
-        elif (BTZN().blackboard["upgrades"]["grooved_spines"] != 1 
-        and BTZN().blackboard["upgrades"]["grooved_spines"] != -1):
-            self.decision = 1
-        elif (BTZN().blackboard["upgrades"]["ground_armor"] != 2
-        and BTZN().blackboard["upgrades"]["ground_armor"] != -1):
-            self.decision = 2
-        elif (BTZN().blackboard["upgrades"]["ground_ranged"] != 2
-        and BTZN().blackboard["upgrades"]["ground_ranged"] != -1):
-            self.decision = 3
-        elif (BTZN().blackboard["upgrades"]["muscular_augments"] == 1
-        and BTZN().blackboard["upgrades"]["ground_armor"] == 2
-        and BTZN().blackboard["upgrades"]["grooved_spines"] == 1
-        and BTZN().blackboard["upgrades"]["ground_ranged"] == 2):
-            self.decision = 4 ## check
-            BTZN().blackboard["upgrades_done"][1] = 1
-            
-        
-
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Upgrade Progression Roach Hydra"   
-
-class selector_upgrade_progression_MR(BTZSelector):
-    
-    ##aa1
-    ##ar1
-    ##aa2
-    ##ar2
-    
-    def decide(self):
-        
-        if (BTZN().blackboard["upgrades"]["air_ranged"] != 2
-        and BTZN().blackboard["upgrades"]["air_ranged"] != -1):
-            self.decision = 0
-        elif (BTZN().blackboard["upgrades"]["air_armor"] != 2
-        and BTZN().blackboard["upgrades"]["air_armor"] != -1):
-            self.decision = 1
-        elif (BTZN().blackboard["upgrades"]["air_armor"] == 2
-        and BTZN().blackboard["upgrades"]["air_ranged"] == 2):
-            self.decision = 2 ## check
-            BTZN().blackboard["upgrades_done"][2] = 1
-            
-        
-
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Upgrade Progression Muta Ruptor"   
-
-
-
 
 class selector_production_ratio_controller(BTZSelector):
     

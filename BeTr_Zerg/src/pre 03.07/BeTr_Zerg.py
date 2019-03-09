@@ -71,39 +71,9 @@ class BTZRoot(BTZN):
                                "obs" : None,
                                "action" : actions.FUNCTIONS.no_op(),
                                "time" : 0,
-                               "opening" : 1, # randomly chosen opening
-                               "build" : 0, # current build choice
-                               "phase" : 0, # which part of build
-                               "alternator" : 0, #move to next part
                                "base_top_left" : 0,
                                "hatcheries" : {},
-                               "army_unit_counts" : {},
-                               "Aspect" : 0,
-                               "switching_aspect" : 0,
-                               "aspect_cam_coords" : [], #should be list of tuples relative to minimap
-                               "tech_done" : [0,0,0],
-                               "tech_buildings" : {"spawning_pool" : (None,None), #minimap locations
-                                                   "roach_warren" : (None,None),
-                                                   "lair" : (None,None),
-                                                   "spire" : (None,None),
-                                                   "evolution_chamber" : (None,None),
-                                                   "spire" : (None,None),
-                                                   "spire_2" : (None,None),
-                                                   "hydralisk_den" : (None,None),
-                                                   },
-                               
-                               "upgrades_done" : [0,0,0],
-                               "upgrades" : {"metabolic_boost" : 0, # 0 means none, -1 means in progress?
-                                             "ground_armor" : 0,
-                                             "ground_ranged" : 0,
-                                             "ground_melee" : 0,
-                                             "muscular_augments" : 0,
-                                             "grooved_spines" : 0,
-                                             "air_armor" : 0,
-                                             "air_ranged" : 0,
-                                             "lair" : 0
-                                            }
-                               
+                               "army_unit_counts" : {}, 
                                })
         
 class BTZLeaf(BTZN):
