@@ -61,7 +61,7 @@ def transformLocation(self, x, y):
 def tech_check(self, unit_type, name):
     if(len(get_units_by_type(self,unit_type))>0):
         unit = random.choice(get_units_by_type(self, unit_type))
-        BTZN().blackboard["tech_buildings"][name] = (unit.x,unit.y)
+        BTZN().blackboard["tech_buildings"][name] = [unit.x, unit.y]
         
     
 """ MISC NODES """
@@ -125,12 +125,13 @@ class leaf_simple_waypoint_close(BTZLeaf):
     def execute(self):
        # print("set waypoint: ")
         #hatchery_y, hatchery_x = ( BTZN().blackboard["obs"].observation['feature_screen'][features.SCREEN_FEATURES.unit_type.index] == units.Zerg.Hatchery).nonzero()
-        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-        if  can_do(self,  actions.FUNCTIONS.Rally_Units_screen.id):
-            target = transformDistance(self, round(hatch.x), 15, round(hatch.y), -9)
-           # print("set waypoint: ", end = "")
-           # print(target)
-            BTZN().blackboard["action"] =  actions.FUNCTIONS.Rally_Units_screen("now", target)
+        if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
+            hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
+            if  can_do(self,  actions.FUNCTIONS.Rally_Units_screen.id):
+                target = transformDistance(self, round(hatch.x), 15, round(hatch.y), -9)
+               # print("set waypoint: ", end = "")
+               # print(target)
+                BTZN().blackboard["action"] =  actions.FUNCTIONS.Rally_Units_screen("now", target)
             
     def __init__(self):
         self.name = self.name + " Simple Waypoint"
@@ -205,10 +206,11 @@ class selector_can_build_evolution_chamber(BTZSelector):
 class leaf_build_evolution_chamber(BTZLeaf):
     
     def execute(self):
-        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-        target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
-        BTZN().blackboard["action"] = actions.FUNCTIONS.Build_EvolutionChamber_screen("now", target)
-        
+        if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
+            hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
+            target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_EvolutionChamber_screen("now", target)
+            
     def __init__(self):
         self.name = self.name + " Build Evolution Chamber" 
         
@@ -227,10 +229,11 @@ class selector_can_build_spire(BTZSelector):
 class leaf_build_spire(BTZLeaf):
     
     def execute(self):
-        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-        target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
-        BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Spire_screen("now", target)
-        
+        if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
+            hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
+            target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Spire_screen("now", target)
+            
     def __init__(self):
         self.name = self.name + " Build Spire" 
 
@@ -249,10 +252,11 @@ class selector_can_build_hydralisk_den(BTZSelector):
 class leaf_build_hydralisk_den(BTZLeaf):
     
     def execute(self):
-        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-        target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
-        BTZN().blackboard["action"] = actions.FUNCTIONS.Build_HydraliskDen_screen("now", target)
-        
+        if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
+            hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
+            target = transformDistance(self, round(hatch.x), -25, round(hatch.y), random.randint(-25,0))
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_HydraliskDen_screen("now", target)
+            
     def __init__(self):
         self.name = self.name + " Build Hydralisk Den" 
 
@@ -370,6 +374,48 @@ class leaf_train_zergling(BTZLeaf):
     
     def __init__(self):
         self.name = self.name + "  Train Zergling"
+    
+class leaf_train_mutalisk(BTZLeaf):
+    
+   
+    def execute(self): #assume larva selected
+        if can_do(self, actions.FUNCTIONS.Train_Mutalisk_quick.id):
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Train_Mutalisk_quick("now")
+        else:
+            BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
+            
+
+    
+    def __init__(self):
+        self.name = self.name + "  Train Mutalisk"
+        
+class leaf_train_hydralisk(BTZLeaf):
+    
+   
+    def execute(self): #assume larva selected
+        if can_do(self, actions.FUNCTIONS.Train_Hydralisk_quick.id):
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Train_Hydralisk_quick("now")
+        else:
+            BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
+            
+
+    
+    def __init__(self):
+        self.name = self.name + "  Train Hydralisk"
+        
+class leaf_train_corruptor(BTZLeaf):
+    
+   
+    def execute(self): #assume larva selected
+        if can_do(self, actions.FUNCTIONS.Train_Corruptor_quick.id):
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Train_Corruptor_quick("now")
+        else:
+            BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
+            
+
+    
+    def __init__(self):
+        self.name = self.name + "  Train Corruptor"
 
 class leaf_train_queen(BTZLeaf):
     
@@ -415,8 +461,9 @@ class leaf_queen_inject_larva(BTZLeaf):
     
     def execute(self):
         if can_do(self, actions.FUNCTIONS.Effect_InjectLarva_screen.id):
-            hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Effect_InjectLarva_screen("now",(hatch.x,hatch.y))
+            if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
+                hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
+                BTZN().blackboard["action"] = actions.FUNCTIONS.Effect_InjectLarva_screen("now",(hatch.x,hatch.y))
         else:
             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
 
@@ -487,13 +534,14 @@ class leaf_shift_overlord_cloud(BTZLeaf):
     
     def execute(self):
         ##hatchery_y, hatchery_x = ( BTZN().blackboard["obs"].observation['feature_screen'][features.SCREEN_FEATURES.unit_type.index] == units.Zerg.Hatchery).nonzero()
-        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-        if len(get_units_by_type(self, units.Zerg.Overlord)) % 2 == 0:
-            target = transformDistance(self, round(hatch.x), -35, round(hatch.y), 0)
-        else:
-            target = transformDistance(self, round(hatch.x), -25, round(hatch.y), -25)
-        if(can_do(self, actions.FUNCTIONS.Move_screen.id)):
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Move_screen("now", target)
+        if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
+            hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
+            if len(get_units_by_type(self, units.Zerg.Overlord)) % 2 == 0:
+                target = transformDistance(self, round(hatch.x), -35, round(hatch.y), 0)
+            else:
+                target = transformDistance(self, round(hatch.x), -25, round(hatch.y), -25)
+            if(can_do(self, actions.FUNCTIONS.Move_screen.id)):
+                BTZN().blackboard["action"] = actions.FUNCTIONS.Move_screen("now", target)
    #     else:
    #         BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
         
@@ -936,7 +984,7 @@ class selector_build_progression(BTZSelector):
 
 
     alternator = 0
-    split = [3,1,1]
+    split = [12,4,4]
     tech_done = 0
     upgrades_done = 0
     
@@ -947,28 +995,27 @@ class selector_build_progression(BTZSelector):
         self.tech_done = BTZN().blackboard["tech_done"][build]
         self.upgrades_done = BTZN().blackboard["upgrades_done"][build]
         
-        if BTZN().blackboard["alternator"] == 1:
-            BTZN().blackboard["alternator"]= 0
-            
-            if BTZN().blackboard["phase"] < self.split[0]:
-                self.decision = 0 #tech
-            elif BTZN().blackboard["phase"] <= self.split[1]+self.split[0]:
-                self.decision = 1 #upgrades
-            elif BTZN().blackboard["phase"] <= sum(self.split):
-                self.decision = 2
-            else:
-                BTZN().blackboard["phase"] = 0
-                
         
+            
+        if BTZN().blackboard["phase"] < self.split[0]:
+            self.decision = 0 #tech
+        elif BTZN().blackboard["phase"] <= self.split[1]+self.split[0]:
+            self.decision = 1 #upgrades
+        elif BTZN().blackboard["phase"] <= sum(self.split):
+            self.decision = 2
+        else:
+            BTZN().blackboard["phase"] = 0
+            
+        BTZN().blackboard["phase"] += 1
         
         if not self.upgrades_done and self.tech_done:
-            self.split = [0,3,7]
+            self.split = [0,6,14]
         elif self.upgrades_done and not self.tech_done:
-            self.split = [3,0,2]
+            self.split = [6,0,4]
         elif self.upgrades_done and self.tech_done:
-            self.split = [1,0,19]
+            self.split = [2,0,30]
         else:
-            self.split = [3,1,1]
+            self.split = [12,4,4]
         
         ## 0 is Tech Buildings
             ## coords are gonna be important
@@ -995,7 +1042,7 @@ class selector_build_progression(BTZSelector):
         self.children = decendant
         self.name = self.name + " Build Progression Alternator"        
 
-
+""" BUILD TECH """
 
 class selector_tech_progression_LM(BTZSelector):
     
@@ -1005,16 +1052,16 @@ class selector_tech_progression_LM(BTZSelector):
     ##spire
     
     def decide(self):
-        if BTZN().blackboard["tech_buildings"]["spawning_pool"][0] == None:
+        if BTZN().blackboard["tech_buildings"]["spawning_pool"][0] == -1:
             self.decision = 0
             BTZN().blackboard["tech_done"][0] = 0
-        elif BTZN().blackboard["tech_buildings"]["evolution_chamber"][0] == None:
+        elif BTZN().blackboard["tech_buildings"]["evolution_chamber"][0] == -1:
             self.decision = 1
             BTZN().blackboard["tech_done"][0] = 0
         elif BTZN().blackboard["upgrades"]["lair"] == 0:
             self.decision = 2
             BTZN().blackboard["tech_done"][0] = 0
-        elif BTZN().blackboard["tech_buildings"]["spire"][0] == None:
+        elif BTZN().blackboard["tech_buildings"]["spire"][0] == -1:
             self.decision = 3
             BTZN().blackboard["tech_done"][0] = 0
         else:
@@ -1036,19 +1083,19 @@ class selector_tech_progression_RH(BTZSelector):
     ##hd
     
     def decide(self):
-        if BTZN().blackboard["tech_buildings"]["spawning_pool"][0] == None:
+        if BTZN().blackboard["tech_buildings"]["spawning_pool"][0] == -1:
             self.decision = 0
             BTZN().blackboard["tech_done"][1] = 0
-        elif BTZN().blackboard["tech_buildings"]["roach_warren"][0] == None:
+        elif BTZN().blackboard["tech_buildings"]["roach_warren"][0] == -1:
             self.decision = 1
             BTZN().blackboard["tech_done"][1] = 0
         elif BTZN().blackboard["upgrades"]["lair"] == 0:
             self.decision = 2
             BTZN().blackboard["tech_done"][1] = 0
-        elif BTZN().blackboard["tech_buildings"]["evolution_chamber"][0] == None:
+        elif BTZN().blackboard["tech_buildings"]["evolution_chamber"][0] == -1:
             self.decision = 3
             BTZN().blackboard["tech_done"][1] = 0
-        elif BTZN().blackboard["tech_buildings"]["hydralisk_den"][0] == None:
+        elif BTZN().blackboard["tech_buildings"]["hydralisk_den"][0] == -1:
             self.decision = 4
             BTZN().blackboard["tech_done"][1] = 0
         else:
@@ -1069,24 +1116,94 @@ class selector_tech_progression_MR(BTZSelector):
     ##spire2
     
     def decide(self):
-        if BTZN().blackboard["tech_buildings"]["spawning_pool"][0] == None:
+        if BTZN().blackboard["tech_buildings"]["spawning_pool"][0] == -1:
             self.decision = 0
             BTZN().blackboard["tech_done"][2] = 0
-        elif BTZN().blackboard["tech_buildings"]["lair"][0] == None:
+        elif BTZN().blackboard["tech_buildings"]["lair"][0] == -1:
             self.decision = 1
             BTZN().blackboard["tech_done"][2] = 0
-        elif BTZN().blackboard["tech_buildings"]["spire"][0] == None:
+        elif BTZN().blackboard["tech_buildings"]["spire"][0] == -1:
             self.decision = 2
             BTZN().blackboard["tech_done"][2] = 0
         else:
             self.decision = 3 ## check
-            BTZN().blackboard["tech_done"][2] = 1
-            
+            BTZN().blackboard["tech_done"][2] = 1 #done
         
 
     def __init__(self, decendant):
         self.children = decendant
         self.name = self.name + " Tech Progression Muta Ruptor"   
+        
+        
+""" BUILD UPGRADES """
+
+class selector_upgrade_tech_exists(BTZSelector): #tech does not exist, recet its build values and nop
+    
+    unit_type = 0
+    tech_name = ""
+    
+    def decide(self):
+        if len(get_units_by_type(self, self.unit_type)) > 0:
+            self.decision = 0
+        else:
+            self.decision = 1 ## not there
+            BTZN().blackboard["tech_buildings"][self.tech_name][0] = -1
+            BTZN().blackboard["tech_buildings"][self.tech_name][0] = -1
+            BTZN().blackboard["tech_done"][BTZN().blackboard["build"]] = 0 #not done
+    
+    def __init__(self, decendant, unit_type, tech_name):
+        self.children = decendant
+        self.unit_type = unit_type
+        self.tech_name = tech_name
+        self.name = self.name + " Upgrade Tech Check"
+    
+class selector_can_uprade(BTZSelector): # can't for whatever reason, so nop 
+    
+    action = 0
+    def decide(self):
+        if can_do(self, self.action):
+            self.decision = 0 ## can
+        else:
+            self.decision = 1 ## cant
+    
+    def __init__(self, decendant, action):
+        self.children = decendant
+        self.action = action
+        self.name = self.name + " Can Upgrade?"
+
+class leaf_start_upgrade(BTZLeaf): # action and set to -1, set timer sas well?
+    
+    action = 0
+    upgrade_name = ""
+    action_id = 0
+    def execute(self):
+        if can_do(self, self.action_id):
+            BTZN().blackboard["action"] = self.action
+            BTZN().blackboard["upgrade_timer"][self.upgrade_name][0] = BTZN().blackboard["time"] + 50
+            BTZN().blackboard["upgrade_timer"][self.upgrade_name][1] = BTZN().blackboard["upgrades"][self.upgrade_name] + 1
+            BTZN().blackboard["upgrades"][self.upgrade_name] = -1
+        
+    def __init__(self, action, action_id, upgrade_name):
+        self.action = action
+        self.upgrade_name = upgrade_name
+        self.action_id = action_id
+        self.name = self.name + " Start Upgrade"    
+    
+
+class decorator_upgrade_timer(BTZDecorator): # -1 to +num
+
+    def execute(self):
+        for upgrade_name in BTZN().blackboard["upgrade_timer"]: # may error?
+            if BTZN().blackboard["upgrades"][upgrade_name] == -1:
+                if BTZN().blackboard["time"] >= BTZN().blackboard["upgrade_timer"][upgrade_name][0]:
+                    BTZN().blackboard["upgrades"][upgrade_name] = BTZN().blackboard["upgrade_timer"][upgrade_name][1]
+                    
+        BTZDecorator.execute(self)
+        
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Upgrade Timer"
+     
 
 class selector_upgrade_progression_LM(BTZSelector):
     
@@ -1188,10 +1305,9 @@ class selector_upgrade_progression_MR(BTZSelector):
 
     def __init__(self, decendant):
         self.children = decendant
-        self.name = self.name + " Upgrade Progression Muta Ruptor"   
+        self.name = self.name + " Upgrade Progression Muta Ruptor"
 
-
-
+""" BUILD UNIT PRODUCTION """
 
 class selector_production_ratio_controller(BTZSelector):
     
@@ -1217,5 +1333,32 @@ class selector_production_ratio_controller(BTZSelector):
     
     
     
+class selector_fake_production_ratio_controller(BTZSelector):
     
     
+    unit_type_one = None
+    unit_type_two = None
+    unit_ratio = 1
+    
+    def decide(self):
+        if random.randint(0,50) % 2:
+            self.decision = 0 ## produce unit type one
+        else:
+            self.decision = 1 ## produce unit type two
+
+        
+
+    def __init__(self, decendant, unit_type_one, unit_type_two, unit_ratio):
+        self.children = decendant
+        self.unit_type_one = unit_type_one
+        self.unit_type_two = unit_type_two
+        self.unit_ratio = unit_ratio
+        self.name = self.name + " Fake Production Ratio Controller"
+        
+class decorator_print_army(BTZDecorator):
+    def execute(self):
+        print("owhqer")
+        
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Upgrade Timer"

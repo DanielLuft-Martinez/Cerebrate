@@ -23,7 +23,7 @@ class CerebrateTree(object):
 
     def build_tree(self):
         
-        """ Queen Ling open """
+        """ Misc Nodes """
         get_drone = selector_idle_workers([leaf_select_drone_random(), leaf_select_idle_worker()]);
         nop = leaf_action_noop()
         bsp = leaf_build_spawning_pool()
@@ -46,8 +46,7 @@ class CerebrateTree(object):
         trn_OL = BTZSequence([leaf_select_unit_random(units.Zerg.Larva),leaf_train_overlord(), leaf_select_unit_all(units.Zerg.Overlord), shift_OL])
        
         trn_ling_all = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_zergling()])
-        
-        #sply = selector_supply([trn_OL,])
+
         drn_OL =  selector_supply([trn_OL, trn_drn])
         
         set_wp = BTZSequence([leaf_select_unit_random(units.Zerg.Hatchery), leaf_simple_waypoint_close()])
@@ -76,15 +75,11 @@ class CerebrateTree(object):
         wave = selector_supply([trn_OL, selector_ling_attack_wave([selector_supply([trn_OL,trn_ling_all]),send])])
         
         # attack = selector_queen_upkeep([queen_upkeep,wave])
-        
         # build = selector_spawning_pool_exist([sp_seq,trn_queen])
-        
         # opener_Qling = selector_build_phase([build, prep, attack])
-        
-        
         ## OLD LING OPENING STUFF
         ##phase_ling = decorator_phase_queen_ling([opener_Qling])
-        
+        """### OPENING ###"""
         
         """  Ling open """
         
@@ -101,16 +96,10 @@ class CerebrateTree(object):
         
         """  Roach open """
         
-        
-        
         trn_roach = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_roach()])
         rch_OL = selector_supply([trn_OL, trn_roach])
         trn_roach_many = BTZSequence([rch_OL,rch_OL,rch_OL,rch_OL,rch_OL,rch_OL])
-        
-       
-        
         ## OLD ATTACK SEQUENCE STUFF
-        
         #sup_up = selector_supply([trn_OL, trn_roach_many])
         #send_sweeps = BTZSequence([leaf_select_army(),leaf_attack_sweeps()])
         #sweeps = selector_sweeps([nop, send_sweeps])
@@ -132,13 +121,12 @@ class CerebrateTree(object):
         
         
     
-        """ OPENING """
-        decide_opening = selector_opening([LING_opening,ROACH_opening])
         
+        decide_opening = selector_opening([LING_opening,ROACH_opening])
         """ ^^^OPENING^^^ """
         
         
-        """    BUILD    """
+        """###   BUILD   ###"""
         
         """  TECH  """
         evo_can = selector_can_build_evolution_chamber([leaf_build_evolution_chamber(),nop])
@@ -153,22 +141,73 @@ class CerebrateTree(object):
         rw_make = rw_seq
         hd_make = BTZSequence([get_drone,hd_can])
         
+        """ UPGRADES """
+        
+        start_mb_u = leaf_start_upgrade(actions.FUNCTIONS.Research_ZerglingMetabolicBoost_quick("now"), actions.FUNCTIONS.Research_ZerglingMetabolicBoost_quick.id, "metabolic_boost")
+        can_mb_u = selector_can_uprade([start_mb_u,leaf_select_unit_random(units.Zerg.SpawningPool)], actions.FUNCTIONS.Research_ZerglingMetabolicBoost_quick.id)
+        mb_u_sel_seq = selector_upgrade_tech_exists([can_mb_u,nop], units.Zerg.SpawningPool, "spawning_pool")
+        
+        start_ma_u = leaf_start_upgrade(actions.FUNCTIONS.Research_MuscularAugments_quick("now"), actions.FUNCTIONS.Research_ZerglingMetabolicBoost_quick.id, "muscular_augments")
+        can_ma_u = selector_can_uprade([start_ma_u,leaf_select_unit_random(units.Zerg.HydraliskDen)], actions.FUNCTIONS.Research_MuscularAugments_quick.id)
+        ma_u_sel_seq = selector_upgrade_tech_exists([can_ma_u,nop], units.Zerg.HydraliskDen, "hydralisk_den")
+        
+        start_gs_u = leaf_start_upgrade(actions.FUNCTIONS.Research_GroovedSpines_quick("now"),actions.FUNCTIONS.Research_MuscularAugments_quick.id, "grooved_spines")
+        can_gs_u = selector_can_uprade([start_gs_u,leaf_select_unit_random(units.Zerg.HydraliskDen)], actions.FUNCTIONS.Research_GroovedSpines_quick.id)
+        gs_u_sel_seq = selector_upgrade_tech_exists([can_gs_u,nop], units.Zerg.HydraliskDen, "hydralisk_den")
+        
+        start_ga_u = leaf_start_upgrade(actions.FUNCTIONS.Research_ZergGroundArmor_quick("now"),actions.FUNCTIONS.Research_ZergGroundArmor_quick.id, "ground_armor")
+        can_ga_u = selector_can_uprade([start_ga_u,leaf_select_unit_random(units.Zerg.EvolutionChamber)], actions.FUNCTIONS.Research_ZergGroundArmor_quick.id)
+        ga_u_sel_seq = selector_upgrade_tech_exists([can_ga_u,nop], units.Zerg.EvolutionChamber, "evolution_chamber")
+        
+        start_gr_u = leaf_start_upgrade(actions.FUNCTIONS.Research_ZergMissileWeapons_quick("now"),actions.FUNCTIONS.Research_ZergMissileWeapons_quick.id, "ground_ranged")
+        can_gr_u = selector_can_uprade([start_gr_u,leaf_select_unit_random(units.Zerg.EvolutionChamber)], actions.FUNCTIONS.Research_ZergMissileWeapons_quick.id)
+        gr_u_sel_seq = selector_upgrade_tech_exists([can_gr_u,nop], units.Zerg.EvolutionChamber, "evolution_chamber")
+        
+        start_gm_u = leaf_start_upgrade(actions.FUNCTIONS.Research_ZergMeleeWeapons_quick("now"),actions.FUNCTIONS.Research_ZergMeleeWeapons_quick.id, "ground_melee")
+        can_gm_u = selector_can_uprade([start_gm_u,leaf_select_unit_random(units.Zerg.EvolutionChamber)], actions.FUNCTIONS.Research_ZergMeleeWeapons_quick.id)
+        gm_u_sel_seq = selector_upgrade_tech_exists([can_gm_u,nop], units.Zerg.EvolutionChamber, "evolution_chamber")
+        
+        start_aa_u = leaf_start_upgrade(actions.FUNCTIONS.Research_ZergFlyerArmor_quick("now"),actions.FUNCTIONS.Research_ZergFlyerArmor_quick.id, "air_armor")
+        can_aa_u = selector_can_uprade([start_aa_u,leaf_select_unit_random(units.Zerg.Spire)], actions.FUNCTIONS.Research_ZergFlyerArmor_quick.id)
+        aa_u_sel_seq = selector_upgrade_tech_exists([can_aa_u,nop], units.Zerg.Spire, "spire")
+        
+        start_ar_u = leaf_start_upgrade(actions.FUNCTIONS.Research_ZergFlyerAttack_quick("now"),actions.FUNCTIONS.Research_ZergFlyerAttack_quick.id, "air_ranged")
+        can_ar_u = selector_can_uprade([start_ar_u,leaf_select_unit_random(units.Zerg.Spire)], actions.FUNCTIONS.Research_ZergFlyerAttack_quick.id)
+        ar_u_sel_seq = selector_upgrade_tech_exists([can_ar_u,nop], units.Zerg.Spire, "spire")
+        
+        
+        """ PRODUCTION """
+        
+        trn_muta = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_mutalisk()])
+        muta_OL = selector_supply([trn_OL, trn_muta])
+        
+        trn_hydra = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_hydralisk()])
+        hydra_OL = selector_supply([trn_OL, trn_hydra])
+        
+        trn_ruptor = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_corruptor()])
+        ruptor_OL = selector_supply([trn_OL, trn_ruptor])
+        
+        
+        ##print_army = 
         
         """ LING_MUTA """
-        
-        
-        lm_tech = selector_tech_progression_LM([sp_make,evo_make,lair_make,spire_make,nop])
-        LING_MUTA = selector_build_progression([lm_tech,nop,nop])
+        lm_production = selector_fake_production_ratio_controller([ling_OL,muta_OL], "zergling", "mutalisk", 2)
+        lm_upgrades = selector_upgrade_progression_LM([mb_u_sel_seq, ga_u_sel_seq, aa_u_sel_seq, gm_u_sel_seq, ar_u_sel_seq, nop])
+        lm_tech = selector_tech_progression_LM([sp_make,evo_make,lair_make,spire_make,ling_OL])
+        LING_MUTA = selector_build_progression([lm_tech,lm_upgrades,lm_production])
         
         
         """ ROACH_HYDRA """
-        
+        rh_production = selector_fake_production_ratio_controller([rch_OL,hydra_OL], "roach", "hydralisk", 1)
+        rh_upgrades = selector_upgrade_progression_RH([ma_u_sel_seq, gs_u_sel_seq,ga_u_sel_seq,gr_u_sel_seq,nop])
         rh_tech = selector_tech_progression_RH([sp_make, rw_make, lair_make, evo_make, hd_make, nop])
-        ROACH_HYDRA = selector_build_progression([rh_tech,nop,nop])
+        ROACH_HYDRA = selector_build_progression([rh_tech,rh_upgrades,rh_production])
         
-        """ MUTA_RUPTOR """
+        """ MUTA_RUPTOR """        
+        mr_production = selector_fake_production_ratio_controller([muta_OL,ruptor_OL], "mutalisk", "corruptor", .5)
+        mr_upgrades = selector_upgrade_progression_MR([ar_u_sel_seq,aa_u_sel_seq,nop])
         mr_tech  = selector_tech_progression_MR([sp_make, lair_make, spire_make, nop])
-        MUTA_RUPTOR = selector_build_progression([mr_tech,nop,nop])
+        MUTA_RUPTOR = selector_build_progression([mr_tech,mr_upgrades,mr_production])
         
         decide_build = selector_build_decision([LING_MUTA ,ROACH_HYDRA, MUTA_RUPTOR])
         
@@ -182,7 +221,7 @@ class CerebrateTree(object):
        
         king = selector_dummmy_king([ aspect_opening ,aspect_build,aspect_econ])
         
-        observe = decorator_step_obs([king])
+        observe = decorator_step_obs([decorator_upgrade_timer([king])])
         
         
         return BTZRoot([observe])     
