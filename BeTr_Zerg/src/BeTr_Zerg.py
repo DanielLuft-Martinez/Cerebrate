@@ -74,10 +74,9 @@ class BTZRoot(BTZN):
                                "opening" : 1, # randomly chosen opening
                                "build" : 0, # current build choice
                                "phase" : 0, # which part of build
-                               "alternator" : 0, #move to next part
                                "base_top_left" : 0,
-                               "hatcheries" : {},
-                               "army_unit_counts" : {},
+                               "hatcheries" : [],
+                               "army_unit_counts" : {},#change to troops later
                                "Aspect" : 0,
                                "switching_aspect" : 0,
                                "aspect_cam_coords" : [], #should be list of tuples relative to minimap

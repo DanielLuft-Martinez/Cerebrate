@@ -68,9 +68,9 @@ class ZergAgent(base_agent.BaseAgent):
             
             self.gas_harvesters = 0
             #self.root.write("opening", (random.randint(0, 10) % 2))
-            self.root.write("build", (random.randint(0, 30) % 3))
-            self.root.write("opening", 0)
-            #self.root.write("build", 2)
+            #self.root.write("build", (random.randint(0, 30) % 3))
+            self.root.write("opening", 1)
+            self.root.write("build", 1)
             self.root.write("harvesters", 0)
             
             self.root.write("hatcheries",{"main" : (xmean,ymean)})

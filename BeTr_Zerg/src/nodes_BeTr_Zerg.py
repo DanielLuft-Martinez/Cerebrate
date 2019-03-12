@@ -59,10 +59,26 @@ def transformLocation(self, x, y):
 
         return [x, y]
 def tech_check(self, unit_type, name):
-    if(len(get_units_by_type(self,unit_type))>0):
-        unit = random.choice(get_units_by_type(self, unit_type))
+    if(len(_get_units_by_type(self,unit_type))>0):
+        unit = random.choice(_get_units_by_type(self, unit_type))
         BTZN().blackboard["tech_buildings"][name] = [unit.x, unit.y]
+    else:
+        BTZN().blackboard["tech_buildings"][name] = [-1,-1]
         
+        if name == "spawning_pool":
+            BTZN().blackboard["tech_done"] = [0,0,0]
+        if name == "roach_warren":
+            BTZN().blackboard["tech_done"][1] = 0
+        if name == "lair":
+            BTZN().blackboard["tech_done"] = [0,0,0]
+        if name == "evolution_chamber":
+            BTZN().blackboard["tech_done"][0] = 0
+            BTZN().blackboard["tech_done"][1] = 0
+        if name == "hydralisk_den":
+            BTZN().blackboard["tech_done"][1] = 0
+        if name == "spire":
+            BTZN().blackboard["tech_done"][0] = 0
+            BTZN().blackboard["tech_done"][2] = 0
     
 """ MISC NODES """
 
@@ -91,8 +107,26 @@ class decorator_step_obs(BTZDecorator):
         
         BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
         self.name = self.name + " Obs"
+
+class decorator_tech_check(BTZDecorator):
+    
+    
+    def execute(self):
+        ##tech obs
+        tech_check(self, units.Zerg.SpawningPool, "spawning_pool")
+        tech_check(self, units.Zerg.RoachWarren, "roach_warren")
+        tech_check(self, units.Zerg.Lair, "lair")
+        tech_check(self, units.Zerg.EvolutionChamber, "evolution_chamber")
+        tech_check(self, units.Zerg.Spire, "spire")
+        tech_check(self, units.Zerg.HydraliskDen, "hydralisk_den")
         
         
+        
+        BTZDecorator.execute(self)
+    
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " tech check"
 class leaf_action_noop(BTZLeaf):
     
     def execute(self):
@@ -208,7 +242,15 @@ class leaf_build_evolution_chamber(BTZLeaf):
     def execute(self):
         if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
             hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-            target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
+            x = 0
+            y = 0
+            if(BTZN().blackboard["base_top_left"]):
+                x = 20
+                y = 10
+            else:
+                x = -20
+                y = -10
+            target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
             BTZN().blackboard["action"] = actions.FUNCTIONS.Build_EvolutionChamber_screen("now", target)
             
     def __init__(self):
@@ -231,7 +273,15 @@ class leaf_build_spire(BTZLeaf):
     def execute(self):
         if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
             hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-            target = transformDistance(self, round(hatch.x), random.randint(-25,11), round(hatch.y), random.randint(-25,11))
+            x = 0
+            y = 0
+            if(BTZN().blackboard["base_top_left"]):
+                x = 20
+                y = 30
+            else:
+                x = -20
+                y = -30
+            target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
             BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Spire_screen("now", target)
             
     def __init__(self):
@@ -254,7 +304,15 @@ class leaf_build_hydralisk_den(BTZLeaf):
     def execute(self):
         if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
             hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-            target = transformDistance(self, round(hatch.x), -25, round(hatch.y), random.randint(-25,0))
+            x = 0
+            y = 0
+            if(BTZN().blackboard["base_top_left"]):
+                x = 20
+            else:
+                x = -20
+                
+            
+            target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
             BTZN().blackboard["action"] = actions.FUNCTIONS.Build_HydraliskDen_screen("now", target)
             
     def __init__(self):
@@ -856,7 +914,7 @@ class selector_dummmy_king(BTZSelector):
             self.decree_time = 0
             #print("Decree count = ", end = "")
             print(self.decree_count)
-            if self.decree_count < 7 :
+            if self.decree_count < 4:
                 self.decision = 0 #opening
                 self.decree_count += 1
                 

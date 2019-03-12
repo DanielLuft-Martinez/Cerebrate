@@ -193,20 +193,20 @@ class CerebrateTree(object):
         """ LING_MUTA """
         lm_production = selector_fake_production_ratio_controller([ling_OL,muta_OL], "zergling", "mutalisk", 2)
         lm_upgrades = selector_upgrade_progression_LM([mb_u_sel_seq, ga_u_sel_seq, aa_u_sel_seq, gm_u_sel_seq, ar_u_sel_seq, nop])
-        lm_tech = selector_tech_progression_LM([sp_make,evo_make,lair_make,spire_make,ling_OL])
+        lm_tech = selector_tech_progression_LM([sp_make,evo_make,lair_make,spire_make,decorator_tech_check([nop])])
         LING_MUTA = selector_build_progression([lm_tech,lm_upgrades,lm_production])
         
         
         """ ROACH_HYDRA """
         rh_production = selector_fake_production_ratio_controller([rch_OL,hydra_OL], "roach", "hydralisk", 1)
         rh_upgrades = selector_upgrade_progression_RH([ma_u_sel_seq, gs_u_sel_seq,ga_u_sel_seq,gr_u_sel_seq,nop])
-        rh_tech = selector_tech_progression_RH([sp_make, rw_make, lair_make, evo_make, hd_make, nop])
+        rh_tech = selector_tech_progression_RH([sp_make, rw_make, lair_make, evo_make, hd_make, decorator_tech_check([nop])])
         ROACH_HYDRA = selector_build_progression([rh_tech,rh_upgrades,rh_production])
         
         """ MUTA_RUPTOR """        
         mr_production = selector_fake_production_ratio_controller([muta_OL,ruptor_OL], "mutalisk", "corruptor", .5)
         mr_upgrades = selector_upgrade_progression_MR([ar_u_sel_seq,aa_u_sel_seq,nop])
-        mr_tech  = selector_tech_progression_MR([sp_make, lair_make, spire_make, nop])
+        mr_tech  = selector_tech_progression_MR([sp_make, lair_make, spire_make, decorator_tech_check([nop])])
         MUTA_RUPTOR = selector_build_progression([mr_tech,mr_upgrades,mr_production])
         
         decide_build = selector_build_decision([LING_MUTA ,ROACH_HYDRA, MUTA_RUPTOR])
