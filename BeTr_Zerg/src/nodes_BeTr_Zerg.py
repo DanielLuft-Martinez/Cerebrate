@@ -10,6 +10,7 @@ from absl import app
 import random
 import numpy as np
 from pysc2.RL_algos.DQN import DQNModel
+from tensorflow.python.client import device_lib
 from BeTr_Zerg import *
 
 
@@ -96,8 +97,6 @@ class decorator_step_obs(BTZDecorator):
         tech_check(self, units.Zerg.EvolutionChamber, "evolution_chamber")
         tech_check(self, units.Zerg.Spire, "spire")
         tech_check(self, units.Zerg.HydraliskDen, "hydralisk_den")
-        
-        BTZN().blackboard["troops"] = {"Zergling": 0, "Roach": 0, "2": 0, "3": 0, "4": 0}
 
         BTZN().blackboard["enemy_units"]= {val.value: 0 for val in units.Protoss}
         BTZN().blackboard["enemy_units"].update({val.value: 0 for val in units.Terran})
@@ -1772,6 +1771,7 @@ class Warlord_NN(BTZSmartSelector):
 
     def _process_blackboard(self):
         enemy_locs = (BTZN().blackboard["obs"].observation["feature_minimap"].player_relative == 4).flatten()
+        
     
         army_locs = BTZN().blackboard["obs"].observation["feature_minimap"].selected.flatten()
     
@@ -1831,4 +1831,5 @@ class Warlord_NN(BTZSmartSelector):
         self.name = "Warlord NN"
         self.data_file = "Warlord_model_file"
         self.setup()
+        print(device_lib.list_local_devices())
 
