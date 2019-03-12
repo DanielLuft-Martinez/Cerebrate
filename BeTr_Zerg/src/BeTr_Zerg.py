@@ -122,11 +122,9 @@ class BTZRoot(BTZN):
                                 "army_unit_counts" : {},#change to troops later
                                 "Aspect" : 0,
                                 "switching_aspect" : 0,
-                                
                                 "tech_done" : [0,0,0],
-                                
-                                
                                 "upgrades_done" : [0,0,0],
+                                "troops" : {"105": 0, "110": 0, "108": 0, "112": 0, "107": 0},
                                 ## also all the scout and army stuff to be added
                                 
 

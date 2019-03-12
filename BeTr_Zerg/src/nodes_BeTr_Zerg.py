@@ -8,7 +8,8 @@ from pysc2.env import sc2_env
 from pysc2.lib import actions, features, units
 from absl import app
 import random
-
+import numpy as np
+from pysc2.RL_algos.DQN import DQNModel
 from BeTr_Zerg import *
 
 
@@ -1011,7 +1012,7 @@ class selector_dummmy_king(BTZSelector):
                 if BTZN().blackboard["Aspect"] != 0:
                     BTZN().blackboard["switching_aspect"] = 1
                     
-            elif self.decree_count % 2 == 0:
+            elif self.decree_count % 3 == 0:
                 self.decision = 1 #build
                 
                 if BTZN().blackboard["Aspect"] != 1:
@@ -1019,16 +1020,28 @@ class selector_dummmy_king(BTZSelector):
                     
                 BTZN().blackboard["Aspect"] = 1
                 self.decree_count = random.randint(20, 30)
-            else:
+            elif self.decree_count % 3 == 1:
                 self.decision = 2 #RECON
-                self.decree_count = random.randint(20, 30)
-                
-            ###### OFFENSE    
                 
                 if BTZN().blackboard["Aspect"] != 2:
                     BTZN().blackboard["switching_aspect"] = 1
                     
                 BTZN().blackboard["Aspect"] = 2
+                self.decree_count = random.randint(20, 30)
+            else:
+                
+                self.decision = 3 #ofense
+ 
+                
+                if BTZN().blackboard["Aspect"] != 3:
+                    BTZN().blackboard["switching_aspect"] = 1
+                    
+                self.decree_count = random.randint(20, 30)
+                
+            
+                
+            ###### OFFENSE    
+                
         
             print("Aspect = ", end = "")
             print( BTZN().blackboard["Aspect"])
@@ -1469,7 +1482,7 @@ class selector_production_ratio_controller(BTZSelector):
     unit_ratio = 1
     
     def decide(self):
-        if (BTZN().blackboard["army_unit_counts"][self.unit_type_one]/(BTZN().blackboard["army_unit_counts"][self.unit_type_two] + 1)  <= self.unit_ratio):
+        if (BTZN().blackboard["troops"][self.unit_type_one]/(BTZN().blackboard["troops"][self.unit_type_two] + 1)  <= self.unit_ratio):
             self.decision = 0 ## produce unit type one
         else:
             self.decision = 1 ## produce unit type two
@@ -1545,8 +1558,8 @@ class aspect_recon_subtree(BTZAspect):
 class aspect_offense_subtree(BTZAspect):
     
     def __init__(self, decendant):
-        self.children = 3
-        self.aspect = aspect_num
+        self.children = decendant
+        self.aspect = 3
         self.name = self.name+" Offense"
         BTZN().blackboard["Aspect_sub_roots"][3] = self
         BTZN().blackboard["Aspect_current_sequences"][3] = self
@@ -1759,21 +1772,35 @@ class Warlord_NN(BTZSmartSelector):
 
     def _process_blackboard(self):
         enemy_locs = (BTZN().blackboard["obs"].observation["feature_minimap"].player_relative == 4).flatten()
-
+    
         army_locs = BTZN().blackboard["obs"].observation["feature_minimap"].selected.flatten()
-
+    
+        my_troops = BTZN().blackboard["obs"].observation.multi_select
+    
+        counts = {}
+        for troop in my_troops:
+            str_type = str(troop.unit_type)
+            if str_type in BTZN().blackboard["troops"]:
+                if str_type in counts:
+                    counts[str_type] += 1
+                else:
+                    counts[str_type] = 0
+    
+    
+        BTZN().blackboard["troops"].update(counts)
+    
         troops = np.zeros(5)
         ind = 0
         for key in sorted(BTZN().blackboard["troops"].keys()):
             troops[ind] = BTZN().blackboard["troops"][key]
             ind += 1
-
+    
         enemy_units = np.zeros(178)
         ind = 0
         for key in sorted(BTZN().blackboard["enemy_units"].keys()):
             enemy_units[ind] = BTZN().blackboard["enemy_units"][key]
             ind += 1
-
+    
         """
         #last_seen = np.zeros(150)
         #ind = 0
@@ -1783,11 +1810,11 @@ class Warlord_NN(BTZSmartSelector):
             last_seen[ind + 2] = tuple[0][1]
             ind += 3
         """
-
-
-        # total state dimension: 64*64 + 64*64 + 5 + 178 + 150 -150 = 8525
+    
+    
+        # total state dimension: 64*64 + 64*64 + 5 + 178 + 150 -150 = 8375
         state = np.concatenate((enemy_locs, army_locs, troops, enemy_units), axis=0)
-
+    
         return state
 
     def setup(self):
@@ -1795,7 +1822,7 @@ class Warlord_NN(BTZSmartSelector):
         self.model.load_model(self.data_file)
 
     def __init__(self, decendant):
-        self.no_of_inputs = 8525
+        self.no_of_inputs = 8375
         self.no_of_actions = 32*32*2 + 1
         self.current_state = None
         self.previous_state = None
@@ -1803,4 +1830,5 @@ class Warlord_NN(BTZSmartSelector):
         self.children = decendant
         self.name = "Warlord NN"
         self.data_file = "Warlord_model_file"
+        self.setup()
 
