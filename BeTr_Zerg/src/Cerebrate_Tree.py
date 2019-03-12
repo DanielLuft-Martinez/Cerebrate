@@ -270,7 +270,7 @@ class CerebrateTree(object):
         aspect_recon = aspect_recon_subtree([get_enemy_status])
         aspect_offense = aspect_offense_subtree([offence_tree])
        
-        king = selector_dummmy_king([ aspect_opening ,aspect_build,aspect_recon, aspect_offense])
+        king = King_NN([ aspect_opening ,aspect_build,aspect_recon, aspect_offense])
         
         observe = decorator_step_obs([decorator_upgrade_timer([king])])
         

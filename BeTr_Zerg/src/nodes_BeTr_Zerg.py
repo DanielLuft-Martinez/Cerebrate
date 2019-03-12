@@ -13,6 +13,7 @@ from pysc2.RL_algos.DQN import DQNModel
 from tensorflow.python.client import device_lib
 from BeTr_Zerg import *
 
+import skimage.measure
 
 """ HELPER FUNCTIONS """
 
@@ -994,6 +995,8 @@ class leaf_select_idle_worker(BTZLeaf):
     
 """   NN INTEGREATION STUFF    """
 
+
+
 class selector_dummmy_king(BTZSelector):
     
     decree_time = 0
@@ -1734,6 +1737,107 @@ class leaf_action_noop(BTZLeaf):
     def __init__(self):
         self.name = self.name + " Action NO-OP"
 
+#KING
+class King_NN(BTZSmartSelector):
+
+    # actions: 3 (0 - build, 1 - recon, 2 - offense)
+    def decide(self):
+        self.current_state = self._process_blackboard()
+
+        if self.previous_action is not None:
+            self.learn()
+
+        action = self.model.act(self.current_state)
+
+        self.decision = action
+        self.previous_action = action
+        self.previous_state = self.current_state
+
+    def learn(self):
+        if BTZN().blackboard["obs"].last():
+            reward = BTZN().blackboard["obs"].reward
+            self.model.learn(self.previous_state, self.previous_action, reward, 'terminal', True)
+            self.model.save_model(self.data_file)
+        else:
+            reward = -0.0001 if BTZN().blackboard["action"] == actions.FUNCTIONS.no_op() else 0
+            self.model.learn(self.previous_state, self.previous_action, reward, self.current_state)
+
+    def _process_blackboard(self):
+
+        # WARLORD STATES
+        enemy_locs = (BTZN().blackboard["obs"].observation["feature_minimap"].player_relative == 4)
+        enemy_locs = skimage.measure.block_reduce(enemy_locs, (2, 2), np.max).flatten()
+
+        army_locs = BTZN().blackboard["obs"].observation["feature_minimap"].selected
+        army_locs = skimage.measure.block_reduce(army_locs, (2, 2), np.max).flatten()
+
+        troops = np.zeros(5)
+        ind = 0
+        for key in sorted(BTZN().blackboard["troops"].keys()):
+            troops[ind] = BTZN().blackboard["troops"][key]
+            ind += 1
+
+        enemy_units = np.zeros(178)
+        ind = 0
+        for key in sorted(BTZN().blackboard["enemy_units"].keys()):
+            enemy_units[ind] = BTZN().blackboard["enemy_units"][key]
+            ind += 1
+
+        """
+        #last_seen = np.zeros(150)
+        #ind = 0
+        #for tuple in BTZN().blackboard["last_seen"]:
+            last_seen[ind] = tuple[1]
+            last_seen[ind + 1] = tuple[0][0]
+            last_seen[ind + 2] = tuple[0][1]
+            ind += 3
+        """
+
+        # total state dimension: 32*32 + 32*32 + 5 + 178 + 150 -150 = 2231
+        warlord_states = np.concatenate((enemy_locs, army_locs, troops, enemy_units), axis=0)
+
+        # King Additional States
+        root_init_states = np.zeros(19)
+        root_init_states[0] = BTZN().blackboard["time"]
+        root_init_states[1] = BTZN().blackboard["opening"]
+        root_init_states[2] = BTZN().blackboard["build"]
+        root_init_states[3] = BTZN().blackboard["phase"]
+        root_init_states[4] = BTZN().blackboard["base_top_left"]
+        root_init_states[5] = BTZN().blackboard["Aspect"]
+        root_init_states[6] = BTZN().blackboard["switching_aspect"]
+        root_init_states[7] = BTZN().blackboard["tech_done"][0]
+        root_init_states[8] = BTZN().blackboard["tech_done"][1]
+        root_init_states[9] = BTZN().blackboard["tech_done"][2]
+        root_init_states[10] = BTZN().blackboard["upgrades_done"][0]
+        root_init_states[11] = BTZN().blackboard["upgrades_done"][1]
+        root_init_states[12] = BTZN().blackboard["upgrades_done"][2]
+        root_init_states[13] = BTZN().blackboard["troops"]["105"]
+        root_init_states[14] = BTZN().blackboard["troops"]["110"]
+        root_init_states[15] = BTZN().blackboard["troops"]["108"]
+        root_init_states[16] = BTZN().blackboard["troops"]["112"]
+        root_init_states[17] = BTZN().blackboard["troops"]["107"]
+        root_init_states[18] = 1 if "extra" in BTZN().blackboard["hatcheries"] else 0
+
+        state = np.concatenate((warlord_states, root_init_states), axis=0)
+
+        return state
+
+    def setup(self):
+        self.model = DQNModel(state_size=self.no_of_inputs, action_size=self.no_of_actions, architecture="AlphaZero")
+        self.model.load_model(self.data_file)
+
+    def __init__(self, decendant):
+        self.no_of_inputs = 2231 + 19
+        self.no_of_actions = 3
+        self.current_state = None
+        self.previous_state = None
+        self.previous_action = None
+        self.children = decendant
+        self.name = "King NN"
+        self.data_file = "King_model_file"
+        self.setup()
+
+
 ##WARLORD
 
 class Warlord_NN(BTZSmartSelector):
@@ -1770,13 +1874,14 @@ class Warlord_NN(BTZSmartSelector):
             self.model.learn(self.previous_state, self.previous_action, reward, self.current_state)
 
     def _process_blackboard(self):
-        enemy_locs = (BTZN().blackboard["obs"].observation["feature_minimap"].player_relative == 4).flatten()
-        
-    
-        army_locs = BTZN().blackboard["obs"].observation["feature_minimap"].selected.flatten()
-    
+        enemy_locs = (BTZN().blackboard["obs"].observation["feature_minimap"].player_relative == 4)
+        enemy_locs = skimage.measure.block_reduce(enemy_locs, (2, 2), np.max).flatten()
+
+        army_locs = BTZN().blackboard["obs"].observation["feature_minimap"].selected
+        army_locs = skimage.measure.block_reduce(army_locs, (2, 2), np.max).flatten()
+
         my_troops = BTZN().blackboard["obs"].observation.multi_select
-    
+
         counts = {}
         for troop in my_troops:
             str_type = str(troop.unit_type)
@@ -1785,22 +1890,22 @@ class Warlord_NN(BTZSmartSelector):
                     counts[str_type] += 1
                 else:
                     counts[str_type] = 0
-    
-    
+
+
         BTZN().blackboard["troops"].update(counts)
-    
+
         troops = np.zeros(5)
         ind = 0
         for key in sorted(BTZN().blackboard["troops"].keys()):
             troops[ind] = BTZN().blackboard["troops"][key]
             ind += 1
-    
+
         enemy_units = np.zeros(178)
         ind = 0
         for key in sorted(BTZN().blackboard["enemy_units"].keys()):
             enemy_units[ind] = BTZN().blackboard["enemy_units"][key]
             ind += 1
-    
+
         """
         #last_seen = np.zeros(150)
         #ind = 0
@@ -1810,11 +1915,11 @@ class Warlord_NN(BTZSmartSelector):
             last_seen[ind + 2] = tuple[0][1]
             ind += 3
         """
-    
-    
-        # total state dimension: 64*64 + 64*64 + 5 + 178 + 150 -150 = 8375
+
+
+        # total state dimension: 32*32 + 32*32 + 5 + 178 + 150 -150 = 2231
         state = np.concatenate((enemy_locs, army_locs, troops, enemy_units), axis=0)
-    
+
         return state
 
     def setup(self):
@@ -1822,7 +1927,7 @@ class Warlord_NN(BTZSmartSelector):
         self.model.load_model(self.data_file)
 
     def __init__(self, decendant):
-        self.no_of_inputs = 8375
+        self.no_of_inputs = 2231
         self.no_of_actions = 32*32*2 + 1
         self.current_state = None
         self.previous_state = None
@@ -1831,5 +1936,3 @@ class Warlord_NN(BTZSmartSelector):
         self.name = "Warlord NN"
         self.data_file = "Warlord_model_file"
         self.setup()
-        print(device_lib.list_local_devices())
-
