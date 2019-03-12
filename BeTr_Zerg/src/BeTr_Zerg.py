@@ -112,6 +112,7 @@ class BTZRoot(BTZN):
                                 
                             ###### BELOW HERE ARE VALUES FOR THE NN INPUTS ######
                                 
+                               
                                 "time" : 0,
                                 "opening" : 1, # randomly chosen opening
                                 "build" : 0, # current build choice

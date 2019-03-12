@@ -213,13 +213,14 @@ class CerebrateTree(object):
         decide_build = selector_build_decision([LING_MUTA ,ROACH_HYDRA, MUTA_RUPTOR])
         
         """ ^^^BUILD^^^ """
+        
         """###   RECON   ###"""
         
         
         noop = leaf_action_noop()
 
         base_cam = leaf_move_cam_to_base()
-        select_scout_unit = leaf_select_unit_for_scouting(scout=units.Zerg.Drone)
+        select_scout_unit = leaf_select_unit_for_scouting()
         set_scout_cg = leaf_set_scouting_control_group()
         
         recall_scout = leaf_recall_scout_control_group()
@@ -228,7 +229,7 @@ class CerebrateTree(object):
         
         get_set_send_scouts = BTZSequence([select_scout_unit, set_scout_cg, scouting_coords])
         
-        any_units_for_scouts = selector_any_scouts([get_set_send_scouts, noop], scout=units.Zerg.Drone)
+        any_units_for_scouts = selector_any_scouts([get_set_send_scouts, noop])
         
         scouting_sequence = BTZSequence([base_cam, any_units_for_scouts])
         get_info = BTZSequence([recall_scout, scout_cam])
@@ -244,6 +245,23 @@ class CerebrateTree(object):
 
         
         """ ^^^RECON^^^ """
+        
+        
+        """###   OFFENSE   ###"""
+        
+        attack = leaf_army_attack()
+        move = leaf_army_move()
+        get_army = leaf_select_army()
+        cam_army = leaf_move_cam_to_army()
+        
+        nop = leaf_action_noop()
+        
+        warlord_nn = Warlord_NN([attack, move, nop])
+        offence_tree = BTZSequence([get_army, cam_army, warlord_nn])
+        
+        
+        
+        """ ^^^OFFENSE^^^ """
         
         aspect_opening =  selector_cam_new_aspect([aspect_opening_subtree([decide_opening]), base_cam])
         aspect_build = selector_cam_new_aspect([aspect_build_subtree([decide_build]), base_cam])
