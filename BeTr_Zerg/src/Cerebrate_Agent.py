@@ -3,7 +3,6 @@ from pysc2.env import sc2_env
 from pysc2.env.run_loop import run_loop
 from pysc2.lib import actions, features, units
 from absl import app
-import Zerg_Gas_Agent
 import BeTr_Zerg
 import nodes_BeTr_Zerg
 import random
@@ -69,8 +68,8 @@ class ZergAgent(base_agent.BaseAgent):
             self.gas_harvesters = 0
             #self.root.write("opening", (random.randint(0, 10) % 2))
             #self.root.write("build", (random.randint(0, 30) % 3))
-            self.root.write("opening", 1)
-            self.root.write("build", 1)
+            self.root.write("opening", 0)
+            self.root.write("build", 2)
             self.root.write("harvesters", 0)
             
             self.root.write("hatcheries",{"main" : (xmean,ymean)})

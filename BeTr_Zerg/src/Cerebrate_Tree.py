@@ -49,15 +49,15 @@ class CerebrateTree(object):
 
         drn_OL =  selector_supply([trn_OL, trn_drn])
         
-        set_wp = BTZSequence([leaf_select_unit_random(units.Zerg.Hatchery), leaf_simple_waypoint_close()])
+        set_wp = selector_is_wapyoint_set([nop, BTZSequence([leaf_select_unit_random(units.Zerg.Hatchery), leaf_simple_waypoint_close()])])
         
         trn_drn_many =  BTZSequence([drn_OL,drn_OL,drn_OL,drn_OL,drn_OL,drn_OL])
         
         can_gas = leaf_build_extractor() #this may need redoing
         gas = BTZSequence([get_drone,can_gas, drn_OL])
         
-        queen_gas = BTZSequence([trn_queen, drn_OL])
-        gas_queen = BTZSequence([set_wp, selector_gas_queen([gas, gas, queen_gas, nop]), nop])
+        queen_gas = BTZSequence([queen_upkeep, drn_OL])
+        gas_queen = BTZSequence([set_wp, selector_gas_queen([gas, gas, queen_gas, nop])])
         
         drn_at_least = selector_worker_at_least([nop, trn_drn_many])
 
@@ -113,8 +113,9 @@ class CerebrateTree(object):
         rw_can = selector_can_build_roach_warren([leaf_build_roach_warren(),nop])
         rw_seq = BTZSequence([get_drone,rw_can])
     
+        b_r_s = BTZSequence([selector_spawning_pool_exist([sp_seq, gas_queen]), selector_roach_warren_exist([rw_seq, gas_queen])])
         
-        build_roach = selector_roach_warren_exist([selector_spawning_pool_exist([sp_seq, rw_seq]),  gas_queen])
+        build_roach = b_r_s
         
         ROACH_opening = selector_roach_opening_phase([build_roach, prep_roach,nop])
         
@@ -191,20 +192,20 @@ class CerebrateTree(object):
         ##print_army = 
         
         """ LING_MUTA """
-        lm_production = selector_fake_production_ratio_controller([ling_OL,muta_OL], "zergling", "mutalisk", 2)
+        lm_production = BTZSequence([queen_upkeep, selector_fake_production_ratio_controller([ling_OL,muta_OL], "zergling", "mutalisk", 2)])
         lm_upgrades = selector_upgrade_progression_LM([mb_u_sel_seq, ga_u_sel_seq, aa_u_sel_seq, gm_u_sel_seq, ar_u_sel_seq, nop])
         lm_tech = selector_tech_progression_LM([sp_make,evo_make,lair_make,spire_make,decorator_tech_check([nop])])
         LING_MUTA = selector_build_progression([lm_tech,lm_upgrades,lm_production])
         
         
         """ ROACH_HYDRA """
-        rh_production = selector_fake_production_ratio_controller([rch_OL,hydra_OL], "roach", "hydralisk", 1)
+        rh_production = BTZSequence([queen_upkeep,selector_fake_production_ratio_controller([rch_OL,hydra_OL], "roach", "hydralisk", 1)])
         rh_upgrades = selector_upgrade_progression_RH([ma_u_sel_seq, gs_u_sel_seq,ga_u_sel_seq,gr_u_sel_seq,nop])
         rh_tech = selector_tech_progression_RH([sp_make, rw_make, lair_make, evo_make, hd_make, decorator_tech_check([nop])])
         ROACH_HYDRA = selector_build_progression([rh_tech,rh_upgrades,rh_production])
         
         """ MUTA_RUPTOR """        
-        mr_production = selector_fake_production_ratio_controller([muta_OL,ruptor_OL], "mutalisk", "corruptor", .5)
+        mr_production = BTZSequence([queen_upkeep,selector_fake_production_ratio_controller([muta_OL,ruptor_OL], "mutalisk", "corruptor", .5)])
         mr_upgrades = selector_upgrade_progression_MR([ar_u_sel_seq,aa_u_sel_seq,nop])
         mr_tech  = selector_tech_progression_MR([sp_make, lair_make, spire_make, decorator_tech_check([nop])])
         MUTA_RUPTOR = selector_build_progression([mr_tech,mr_upgrades,mr_production])
@@ -215,11 +216,12 @@ class CerebrateTree(object):
         
         
         
-        aspect_opening = selector_cam_new_aspect([decide_opening , leaf_cam_aspect()])
-        aspect_build = selector_cam_new_aspect([decide_build , leaf_cam_aspect()])
-        aspect_econ = selector_cam_new_aspect([nop, leaf_cam_aspect()])
+        aspect_opening =  aspect_opening_subtree([selector_cam_new_aspect([decide_opening , leaf_cam_aspect()])])
+        aspect_build = aspect_build_subtree([selector_cam_new_aspect([decide_build , leaf_cam_aspect()])])
+        aspect_recon = aspect_recon_subtree([selector_cam_new_aspect([nop, leaf_cam_aspect()])])
+        aspect_offense = aspect_recon_subtree([nop])
        
-        king = selector_dummmy_king([ aspect_opening ,aspect_build,aspect_econ])
+        king = selector_dummmy_king([ aspect_opening ,aspect_build,aspect_recon])
         
         observe = decorator_step_obs([decorator_upgrade_timer([king])])
         

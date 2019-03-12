@@ -103,7 +103,6 @@ class decorator_step_obs(BTZDecorator):
     def __init__(self, decendant):
         self.children = decendant
         BTZN().blackboard["free_supply"] = 0
-        BTZN().blackboard["spawning_pools"] = 0
         
         BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
         self.name = self.name + " Obs"
@@ -154,6 +153,20 @@ class leaf_select_army(BTZLeaf):
     def __init__(self):
         self.name = self.name + " Select Army"
         
+class selector_is_wapyoint_set(BTZSelector):
+    yes = False
+    def decide(self):
+        
+        if self.yes:
+            self.decision = 0 #wpset carry on
+        else:
+            self.decision = 1 #set it
+            self.yes = True
+    
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " is Waypoint Pool?"   
+        
 class leaf_simple_waypoint_close(BTZLeaf):
     
     def execute(self):
@@ -162,7 +175,26 @@ class leaf_simple_waypoint_close(BTZLeaf):
         if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
             hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
             if  can_do(self,  actions.FUNCTIONS.Rally_Units_screen.id):
-                target = transformDistance(self, round(hatch.x), 15, round(hatch.y), -9)
+                x = 0
+                y = 0
+                if(BTZN().blackboard["base_top_left"]):
+                    x = 21
+                    y = -21
+                else:
+                    x = 21
+                    y = 21
+                
+                
+                #gasY,gasX = (((BTZN().blackboard["obs"]).observation.feature_screen.unit_type == 343 ).nonzero())
+               # x = random.choice(gasX)
+               # y = random.choice(gasY)
+               # BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", (x, y))
+                
+                print("set waypoint to ", end ="")
+                print(x,end=",")
+                print(y)
+                
+                target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
                # print("set waypoint: ", end = "")
                # print(target)
                 BTZN().blackboard["action"] =  actions.FUNCTIONS.Rally_Units_screen("now", target)
@@ -215,13 +247,93 @@ class selector_can_build_spawning_pool(BTZSelector):
 class leaf_build_spawning_pool(BTZLeaf):
     
     def execute(self):
-        gasY,gasX = (((BTZN().blackboard["obs"]).observation.feature_screen.unit_type == 343 ).nonzero())
-        x = random.choice(gasX)
-        y = random.choice(gasY)
-        BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", (x, y))
+       if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
+            hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
+            x = 0
+            y = 0
+            if(BTZN().blackboard["base_top_left"]):
+                x = 15
+                y = 0
+            else:
+                x = 15
+                y = 0
+            
+            
+            #gasY,gasX = (((BTZN().blackboard["obs"]).observation.feature_screen.unit_type == 343 ).nonzero())
+           # x = random.choice(gasX)
+           # y = random.choice(gasY)
+           # BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", (x, y))
+            
+            print("making spawning pool at ", end ="")
+            print(x,end=",")
+            print(y)
+            
+            target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", target)
     
     def __init__(self):
         self.name = self.name + " Build Spawning Pool" 
+        
+class selector_roach_warren_exist(BTZSelector):
+    
+    def decide(self):
+        
+        if len(get_units_by_type(self, units.Zerg.RoachWarren)) <= 0:
+            self.decision = 0 #does not have sp - 0 is build sp sequence
+        else:
+            self.decision = 1 #does have - 1 is other actions
+    
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Roach Warren?"
+        
+
+        
+class selector_can_build_roach_warren(BTZSelector):
+    
+    def decide(self):
+        if can_do(self,  actions.FUNCTIONS.Build_RoachWarren_screen.id):
+            self.decision = 0 # it is a possible action - 0 is procede with building it
+        else:
+            self.decision = 1 # cant, so NOOP
+    
+    def __init__(self, decendant):
+        self.children = decendant
+        self.name = self.name + " Can Build Roach Warren?"
+        
+           
+class leaf_build_roach_warren(BTZLeaf):
+    
+    def execute(self):
+        gasY,gasX = (((BTZN().blackboard["obs"]).observation.feature_screen.unit_type == 343 ).nonzero())
+        x = random.choice(gasX)
+        y = random.choice(gasY)
+        hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
+        if can_do(self,  actions.FUNCTIONS.Build_RoachWarren_screen.id):
+            if(BTZN().blackboard["base_top_left"]):
+                x = 15
+                y = -15
+            else:
+                x = 15
+                y = 15
+            
+            
+            #gasY,gasX = (((BTZN().blackboard["obs"]).observation.feature_screen.unit_type == 343 ).nonzero())
+           # x = random.choice(gasX)
+           # y = random.choice(gasY)
+           # BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", (x, y))
+            
+            print("making roach warren at ", end ="")
+            print(x,end=",")
+            print(y)
+            
+            target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_RoachWarren_screen("now", target)
+        else:
+            BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
+    
+    def __init__(self):
+        self.name = self.name + " Build Roach Warren" 
         
 """ build tech """
 
@@ -245,11 +357,12 @@ class leaf_build_evolution_chamber(BTZLeaf):
             x = 0
             y = 0
             if(BTZN().blackboard["base_top_left"]):
-                x = 20
-                y = 10
+                x = 30
+                y = 0
             else:
-                x = -20
-                y = -10
+                x = 30
+                y = 0
+                
             target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
             BTZN().blackboard["action"] = actions.FUNCTIONS.Build_EvolutionChamber_screen("now", target)
             
@@ -276,11 +389,11 @@ class leaf_build_spire(BTZLeaf):
             x = 0
             y = 0
             if(BTZN().blackboard["base_top_left"]):
-                x = 20
-                y = 30
+                x = 0
+                y = -15
             else:
-                x = -20
-                y = -30
+                x = 0
+                y = 15
             target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
             BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Spire_screen("now", target)
             
@@ -307,10 +420,15 @@ class leaf_build_hydralisk_den(BTZLeaf):
             x = 0
             y = 0
             if(BTZN().blackboard["base_top_left"]):
-                x = 20
+                x = 30
+                y = -15
             else:
-                x = -20
-                
+                x = 30
+                y = 15
+            
+            print("making hydralisk den at ", end ="")
+            print(x,end=",")
+            print(y)
             
             target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
             BTZN().blackboard["action"] = actions.FUNCTIONS.Build_HydraliskDen_screen("now", target)
@@ -697,48 +815,6 @@ class selector_roach_opening_phase(BTZSelector):
         self.children = decendant
         self.name = self.name + " Roach Opening Phase"
 
-class selector_roach_warren_exist(BTZSelector):
-    
-    def decide(self):
-        
-        if len(get_units_by_type(self, units.Zerg.RoachWarren)) <= 0:
-            self.decision = 0 #does not have sp - 0 is build sp sequence
-        else:
-            self.decision = 1 #does have - 1 is other actions
-    
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Roach Warren?"
-        
-
-        
-class selector_can_build_roach_warren(BTZSelector):
-    
-    def decide(self):
-        if can_do(self,  actions.FUNCTIONS.Build_RoachWarren_screen.id):
-            self.decision = 0 # it is a possible action - 0 is procede with building it
-        else:
-            self.decision = 1 # cant, so NOOP
-    
-    def __init__(self, decendant):
-        self.children = decendant
-        self.name = self.name + " Can Build Roach Warren?"
-        
-           
-class leaf_build_roach_warren(BTZLeaf):
-    
-    def execute(self):
-        gasY,gasX = (((BTZN().blackboard["obs"]).observation.feature_screen.unit_type == 343 ).nonzero())
-        x = random.choice(gasX)
-        y = random.choice(gasY)
-        if can_do(self,  actions.FUNCTIONS.Build_RoachWarren_screen.id):
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_RoachWarren_screen("now", (x, y))
-        else:
-            BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
-    
-    def __init__(self):
-        self.name = self.name + " Build Roach Warren" 
-        
         
         
 class leaf_train_roach(BTZLeaf):
@@ -763,11 +839,18 @@ class leaf_train_roach(BTZLeaf):
 class leaf_build_extractor(BTZLeaf):
     
     def execute(self):
-        gasY,gasX = (((BTZN().blackboard["obs"]).observation.feature_screen.unit_type == 343 ).nonzero())
-        x = random.choice(gasX)
-        y = random.choice(gasY)
-        if can_do(self, actions.FUNCTIONS.Build_Extractor_screen.id):
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Extractor_screen("now", (x, y))
+        #gasY,gasX = (((BTZN().blackboard["obs"]).observation.feature_screen.unit_type == 343 ).nonzero())
+        #x = random.choice(gasX)
+        #y = random.choice(gasY)
+        if len(get_units_by_type(self, 343)) > 0 :
+            gas = random.choice(get_units_by_type(self, 343))
+            x = gas.x
+            y = gas.y
+            
+            if can_do(self, actions.FUNCTIONS.Build_Extractor_screen.id):
+                BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Extractor_screen("now", (x, y))
+        else:
+             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
     
     def __init__(self):
         self.name = self.name + " Build Extractor" 
@@ -798,11 +881,14 @@ class selector_larva_to_roach(BTZSelector):
         self.name = self.name + " harvester count"
 class selector_count_gas_worker(BTZSelector):
     
+    run = 0
     def decide(self):
-        if(BTZN().blackboard["harvesters"] > 1):
+        if self.run % 2 == 1:
+            self.run +=1
             self.decision = 1
         else:
-            BTZN().blackboard["harvesters"] += 1
+            self.run +=1
+            self.decision = 0
 
     def __init__(self, decendant):
         self.children = decendant
@@ -910,28 +996,30 @@ class selector_dummmy_king(BTZSelector):
     decree_count = 0
     
     def decide(self):
-        if self.decree_time >= 7:
+        if self.decree_time >= 15:
             self.decree_time = 0
             #print("Decree count = ", end = "")
             print(self.decree_count)
-            if self.decree_count < 4:
+            if self.decree_count < 20:
                 self.decision = 0 #opening
                 self.decree_count += 1
                 
                 if BTZN().blackboard["Aspect"] != 0:
                     BTZN().blackboard["switching_aspect"] = 1
                     
-            elif self.decree_count % 2 == 0:
+            elif 2 % 2 == 0:
                 self.decision = 1 #build
                 
                 if BTZN().blackboard["Aspect"] != 1:
                     BTZN().blackboard["switching_aspect"] = 1
                     
                 BTZN().blackboard["Aspect"] = 1
-                self.decree_count = random.randint(10, 21)
+                self.decree_count = random.randint(20, 30)
             else:
-                self.decision = 0 #econ
-                self.decree_count = random.randint(10, 21)
+                self.decision = 0 #RECON
+                self.decree_count = random.randint(20, 30)
+                
+            ###### OFFENSE    
                 
                 if BTZN().blackboard["Aspect"] != 2:
                     BTZN().blackboard["switching_aspect"] = 1
@@ -1420,3 +1508,42 @@ class decorator_print_army(BTZDecorator):
     def __init__(self, decendant):
         self.children = decendant
         self.name = self.name + " Upgrade Timer"
+        
+class aspect_opening_subtree(BTZAspect):
+    
+    def __init__(self, decendant):
+        self.children = decendant
+        self.aspect = 0
+        self.name = self.name+" Opening"
+        BTZN().blackboard["Aspect_sub_roots"][0] = self
+        BTZN().blackboard["Aspect_current_sequences"][0] = self
+    
+class aspect_build_subtree(BTZAspect):
+
+    def __init__(self, decendant):
+        self.children = decendant
+        self.aspect = 1
+        self.name = self.name+" Build"
+        BTZN().blackboard["Aspect_sub_roots"][1] = self
+        BTZN().blackboard["Aspect_current_sequences"][1] = self
+
+class aspect_recon_subtree(BTZAspect):
+    
+    def __init__(self, decendant):
+        self.children = decendant
+        self.aspect = 2
+        self.name = self.name+" Recon"
+        BTZN().blackboard["Aspect_sub_roots"][2] = self
+        BTZN().blackboard["Aspect_current_sequences"][2] = self
+
+class aspect_offense_subtree(BTZAspect):
+    
+    def __init__(self, decendant):
+        self.children = 3
+        self.aspect = aspect_num
+        self.name = self.name+" Offense"
+        BTZN().blackboard["Aspect_sub_roots"][3] = self
+        BTZN().blackboard["Aspect_current_sequences"][3] = self
+                                
+    
+    
