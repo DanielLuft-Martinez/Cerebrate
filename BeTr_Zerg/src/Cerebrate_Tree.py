@@ -213,12 +213,41 @@ class CerebrateTree(object):
         decide_build = selector_build_decision([LING_MUTA ,ROACH_HYDRA, MUTA_RUPTOR])
         
         """ ^^^BUILD^^^ """
+        """###   RECON   ###"""
         
         
+        noop = leaf_action_noop()
+
+        base_cam = leaf_move_cam_to_base()
+        select_scout_unit = leaf_select_unit_for_scouting(scout=units.Zerg.Drone)
+        set_scout_cg = leaf_set_scouting_control_group()
         
-        aspect_opening =  aspect_opening_subtree([selector_cam_new_aspect([decide_opening , leaf_cam_aspect()])])
-        aspect_build = aspect_build_subtree([selector_cam_new_aspect([decide_build , leaf_cam_aspect()])])
-        aspect_recon = aspect_recon_subtree([selector_cam_new_aspect([nop, leaf_cam_aspect()])])
+        recall_scout = leaf_recall_scout_control_group()
+        scout_cam = leaf_move_cam_to_scout()
+        scouting_coords = BTZSequence([leaf_send_scout(coords=(x,y)) for (x,y) in [(10,10), (20,20), (30,30), (40,40), (50,50), (60,60)]])
+        
+        get_set_send_scouts = BTZSequence([select_scout_unit, set_scout_cg, scouting_coords])
+        
+        any_units_for_scouts = selector_any_scouts([get_set_send_scouts, noop], scout=units.Zerg.Drone)
+        
+        scouting_sequence = BTZSequence([base_cam, any_units_for_scouts])
+        get_info = BTZSequence([recall_scout, scout_cam])
+        
+        any_scouts = selector_any_units_in_scouting_cg([scouting_sequence, get_info])
+        
+        get_enemy_status = decorator_get_enemy_information([any_scouts])
+        
+        
+        #observe = decorator_step_obs([get_enemy_status])
+        
+        #self.root = BTZRoot([observe])
+
+        
+        """ ^^^RECON^^^ """
+        
+        aspect_opening =  selector_cam_new_aspect([aspect_opening_subtree([decide_opening]), base_cam])
+        aspect_build = selector_cam_new_aspect([aspect_build_subtree([decide_build]), base_cam])
+        aspect_recon = aspect_recon_subtree([get_enemy_status])
         aspect_offense = aspect_recon_subtree([nop])
        
         king = selector_dummmy_king([ aspect_opening ,aspect_build,aspect_recon])
