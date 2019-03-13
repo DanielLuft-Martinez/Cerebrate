@@ -1632,7 +1632,8 @@ class leaf_set_scouting_control_group(BTZLeaf):
 class leaf_send_scout(BTZLeaf):
     def execute(self):
         x, y = self.coords
-        BTZN().blackboard["action"] = actions.FUNCTIONS.Move_minimap("queued", (x, y))
+        if(can_do(self,actions.FUNCTIONS.Move_minimap.id)):
+            BTZN().blackboard["action"] = actions.FUNCTIONS.Move_minimap("queued", (x, y))
 
     def __init__(self, coords):
         self.coords = coords
@@ -1657,7 +1658,10 @@ class leaf_move_cam_to_scout(BTZLeaf):
         if len(x) == 0:
             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
         else:
-            BTZN().blackboard["action"] = actions.FUNCTIONS.move_camera((x[0], y[0]))
+            if can_do(self, actions.FUNCTIONS.move_camera.id):
+                BTZN().blackboard["action"] = actions.FUNCTIONS.move_camera((x[0], y[0]))
+            else:
+                BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
 
     def __init__(self):
         self.name = self.name + " Cam Aspect Scout"
@@ -1740,18 +1744,47 @@ class leaf_action_noop(BTZLeaf):
 #KING
 class King_NN(BTZSmartSelector):
 
+    decree_time = 0
+    decree_count = 0
+
     # actions: 3 (0 - build, 1 - recon, 2 - offense)
     def decide(self):
-        self.current_state = self._process_blackboard()
 
-        if self.previous_action is not None:
-            self.learn()
+        
+        if self.decree_time >= 15:
+            self.decree_time = 0
+            #print("Decree count = ", end = "")
+            print(self.decree_count)
+            if self.decree_count < 20:
+                self.decision = 0 #opening
+                self.decree_count += 1
 
-        action = self.model.act(self.current_state)
+                if BTZN().blackboard["Aspect"] != 0:
+                    BTZN().blackboard["switching_aspect"] = 1
+            else:
 
-        self.decision = action
-        self.previous_action = action
-        self.previous_state = self.current_state
+                self.current_state = self._process_blackboard()
+
+                if self.previous_action is not None:
+                    self.learn()
+
+                action = self.model.act(self.current_state) + 1
+                
+                if BTZN().blackboard["Aspect"] != action:
+                    BTZN().blackboard["switching_aspect"] = 1
+                BTZN().blackboard["Aspect"] = action
+                
+                self.decision = action 
+                self.previous_action = action -1
+                self.previous_state = self.current_state
+
+            print("Aspect = ", end = "")
+            print( BTZN().blackboard["Aspect"])
+
+        else:
+            self.decree_time += 1
+            BTZN().blackboard["switching_aspect"] = 0
+
 
     def learn(self):
         if BTZN().blackboard["obs"].last():
@@ -1793,7 +1826,7 @@ class King_NN(BTZSmartSelector):
             ind += 3
         """
 
-        # total state dimension: 32*32 + 32*32 + 5 + 178 + 150 -150 = 2231
+        # total state dimension: 32*32 + 32*32 + 5 + 178 + 150 -150 = 8375
         warlord_states = np.concatenate((enemy_locs, army_locs, troops, enemy_units), axis=0)
 
         # King Additional States
