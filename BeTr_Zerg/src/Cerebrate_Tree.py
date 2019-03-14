@@ -205,7 +205,7 @@ class CerebrateTree(object):
         ROACH_HYDRA = selector_build_progression([rh_tech,rh_upgrades,rh_production])
         
         """ MUTA_RUPTOR """        
-        mr_production = BTZSequence([queen_upkeep,selector_production_ratio_controller([muta_OL,ruptor_OL], "108", "112", .5)])
+        mr_production = BTZSequence([queen_upkeep,selector_production_ratio_controller([muta_OL,ruptor_OL], "108", "112", 3)])
         mr_upgrades = selector_upgrade_progression_MR([ar_u_sel_seq,aa_u_sel_seq,nop])
         mr_tech  = selector_tech_progression_MR([sp_make, lair_make, spire_make, decorator_tech_check([nop])])
         MUTA_RUPTOR = selector_build_progression([mr_tech,mr_upgrades,mr_production])
