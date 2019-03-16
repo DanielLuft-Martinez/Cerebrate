@@ -195,14 +195,15 @@ class leaf_simple_waypoint_close(BTZLeaf):
                # y = random.choice(gasY)
                # BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", (x, y))
                 
-                print("set waypoint to ", end ="")
-                print(x,end=",")
-                print(y)
+                #print("set waypoint to ", end ="")
+                #print(x,end=",")
+                #print(y)
                 
                 target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
                # print("set waypoint: ", end = "")
                # print(target)
-                BTZN().blackboard["action"] =  actions.FUNCTIONS.Rally_Units_screen("now", target)
+                if target[0] >= 0 and target[1] >=0 and target[0] <= 83 and target[1] <= 83 :
+                    BTZN().blackboard["action"] =  actions.FUNCTIONS.Rally_Units_screen("now", target)
             
     def __init__(self):
         self.name = self.name + " Simple Waypoint"
@@ -228,7 +229,7 @@ class leaf_select_drone_random(BTZLeaf):
     def execute(self): #assume has drones
         if len(get_units_by_type(self, units.Zerg.Drone)) > 0:
             drone = random.choice(get_units_by_type(self, units.Zerg.Drone))
-            if drone.x >= 0 and drone.y >=0 and drone.x <= 84 and drone.y <= 84 :
+            if drone.x >= 0 and drone.y >=0 and drone.x <= 83 and drone.y <= 83 :
                 BTZN().blackboard["action"] = actions.FUNCTIONS.select_point("select", (drone.x,drone.y))
 
     
@@ -269,12 +270,13 @@ class leaf_build_spawning_pool(BTZLeaf):
            # y = random.choice(gasY)
            # BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", (x, y))
             
-            print("making spawning pool at ", end ="")
-            print(x,end=",")
-            print(y)
+            #print("making spawning pool at ", end ="")
+            #print(x,end=",")
+            #print(y)
             
             target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", target)
+            if target[0] >= 0 and target[1]>=0 and target[0] <= 83 and target[1] <= 83 :
+                    BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", target)
     
     def __init__(self):
         self.name = self.name + " Build Spawning Pool" 
@@ -328,12 +330,13 @@ class leaf_build_roach_warren(BTZLeaf):
            # y = random.choice(gasY)
            # BTZN().blackboard["action"] = actions.FUNCTIONS.Build_SpawningPool_screen("now", (x, y))
             
-            print("making roach warren at ", end ="")
-            print(x,end=",")
-            print(y)
+            #print("making roach warren at ", end ="")
+            #print(x,end=",")
+            #print(y)
             
             target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_RoachWarren_screen("now", target)
+            if target[0] >= 0 and target[1] >=0 and target[0] <= 83 and target[1] <= 83 :
+                    BTZN().blackboard["action"] = actions.FUNCTIONS.Build_RoachWarren_screen("now", target)
         else:
             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
     
@@ -369,7 +372,8 @@ class leaf_build_evolution_chamber(BTZLeaf):
                 y = 0
                 
             target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_EvolutionChamber_screen("now", target)
+            if target[0] >= 0 and target[1] >=0 and target[0] <= 83 and target[1] <= 83 :
+                BTZN().blackboard["action"] = actions.FUNCTIONS.Build_EvolutionChamber_screen("now", target)
             
     def __init__(self):
         self.name = self.name + " Build Evolution Chamber" 
@@ -399,8 +403,10 @@ class leaf_build_spire(BTZLeaf):
             else:
                 x = 0
                 y = 15
-            target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Spire_screen("now", target)
+                
+            target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)        
+            if target[0] >= 0 and target[1] >=0 and target[0] <= 83 and target[1] <= 83 :
+                BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Spire_screen("now", target)
             
     def __init__(self):
         self.name = self.name + " Build Spire" 
@@ -431,12 +437,13 @@ class leaf_build_hydralisk_den(BTZLeaf):
                 x = 30
                 y = 15
             
-            print("making hydralisk den at ", end ="")
-            print(x,end=",")
-            print(y)
+            #print("making hydralisk den at ", end ="")
+            #print(x,end=",")
+            #print(y)
             
             target = transformDistance(self, round(hatch.x), x, round(hatch.y), y)
-            BTZN().blackboard["action"] = actions.FUNCTIONS.Build_HydraliskDen_screen("now", target)
+            if target[0] >= 0 and target[1] >=0 and target[0] <= 83 and target[1] <= 83 :
+                BTZN().blackboard["action"] = actions.FUNCTIONS.Build_HydraliskDen_screen("now", target)
             
     def __init__(self):
         self.name = self.name + " Build Hydralisk Den" 
@@ -488,7 +495,7 @@ class leaf_select_unit_random(BTZLeaf):
         units = get_units_by_type(self, self.unit_type)
         if len(units) > 0 and (type(units) != None):
             unit = random.choice(units)
-            if unit.x >= 0 and unit.y >=0 and unit.x <= 84 and unit.y <= 84:
+            if unit.x >= 0 and unit.y >=0 and unit.x <= 83 and unit.y <= 83:
                 BTZN().blackboard["action"] = actions.FUNCTIONS.select_point("select", (unit.x,unit.y))
         else:
             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
@@ -505,7 +512,7 @@ class leaf_select_unit_all(BTZLeaf):
         units = get_units_by_type(self, self.unit_type)
         if len(units) > 0 and (type(units) != None):
             unit = random.choice(units)
-            if unit.x >= 0 and unit.y >=0 and unit.x <= 84 and unit.y <= 84:
+            if unit.x >= 0 and unit.y >=0 and unit.x <= 83 and unit.y <= 83:
                 BTZN().blackboard["action"] = actions.FUNCTIONS.select_point("select_all_type", (unit.x,unit.y))
         else:
             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
@@ -644,7 +651,8 @@ class leaf_queen_inject_larva(BTZLeaf):
         if can_do(self, actions.FUNCTIONS.Effect_InjectLarva_screen.id):
             if(len(get_units_by_type(self, units.Zerg.Hatchery))>0):
                 hatch = random.choice(get_units_by_type(self, units.Zerg.Hatchery))
-                BTZN().blackboard["action"] = actions.FUNCTIONS.Effect_InjectLarva_screen("now",(hatch.x,hatch.y))
+                if hatch.x >= 0 and hatch.y >=0 and hatch.x <= 83 and hatch.y <= 83:
+                    BTZN().blackboard["action"] = actions.FUNCTIONS.Effect_InjectLarva_screen("now",(hatch.x,hatch.y))
         else:
             BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
 
@@ -853,7 +861,9 @@ class leaf_build_extractor(BTZLeaf):
             y = gas.y
             
             if can_do(self, actions.FUNCTIONS.Build_Extractor_screen.id):
-                BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Extractor_screen("now", (x, y))
+                if x >= 0 and y >=0 and x <= 83 and y <= 83 :
+                    
+                    BTZN().blackboard["action"] = actions.FUNCTIONS.Build_Extractor_screen("now", (x, y))
         else:
              BTZN().blackboard["action"] = actions.FUNCTIONS.no_op()
     
@@ -869,7 +879,8 @@ class leaf_extract_gas(BTZLeaf):
                
             GH = random.choice(get_units_by_type(self, units.Zerg.Extractor))
 
-            BTZN().blackboard["action"] =  actions.FUNCTIONS.Harvest_Gather_screen("now", (GH.x, GH.y))
+            if GH.x >= 0 and GH.y >=0 and GH.x <= 83 and GH.y <= 83 :
+                    BTZN().blackboard["action"] =  actions.FUNCTIONS.Harvest_Gather_screen("now", (GH.x, GH.y))
     
     def __init__(self):
         self.name = self.name + " Harvest Gas"
@@ -1006,7 +1017,7 @@ class selector_dummmy_king(BTZSelector):
         if self.decree_time >= 15:
             self.decree_time = 0
             #print("Decree count = ", end = "")
-            print(self.decree_count)
+            #print(self.decree_count)
             if self.decree_count < 20:
                 self.decision = 0 #opening
                 self.decree_count += 1
@@ -1045,8 +1056,8 @@ class selector_dummmy_king(BTZSelector):
             ###### OFFENSE    
                 
         
-            print("Aspect = ", end = "")
-            print( BTZN().blackboard["Aspect"])
+            #print("Aspect = ", end = "")
+            #print( BTZN().blackboard["Aspect"])
                
         else:
             self.decree_time += 1
@@ -1118,17 +1129,17 @@ class selector_build_decision(BTZSelector):
     def decide(self):
         self.decision = BTZN().blackboard["build"] 
         
-        if BTZN().blackboard["build"] == 0 :
-            print("LING MUTA")
+        #if BTZN().blackboard["build"] == 0 :
+            #print("LING MUTA")
             
-        elif BTZN().blackboard["build"] == 1 :
-            print("ROACH HYDRA")
+        #elif BTZN().blackboard["build"] == 1 :
+           # print("ROACH HYDRA")
             
-        elif BTZN().blackboard["build"] == 2 :
-            print("MUTA RUPTOR")
-        else:
+        #elif BTZN().blackboard["build"] == 2 :
+            #print("MUTA RUPTOR")
+        #else:
             ##not possible
-            print("not possible")
+            #print("not possible")
         ## 0 is Ling Muta
         ## 1 is Roach Hydra
         ## 2 is Muta Ruptor
@@ -1158,7 +1169,7 @@ class selector_build_progression(BTZSelector):
     def decide(self):
         build = BTZN().blackboard["build"]
         #print(self.alternator)
-        print(self.split)
+        #print(self.split)
         self.tech_done = BTZN().blackboard["tech_done"][build]
         self.upgrades_done = BTZN().blackboard["upgrades_done"][build]
         
@@ -1176,9 +1187,9 @@ class selector_build_progression(BTZSelector):
         BTZN().blackboard["phase"] += 1
         
         if not self.upgrades_done and self.tech_done:
-            self.split = [0,6,14]
+            self.split = [0,4,16]
         elif self.upgrades_done and not self.tech_done:
-            self.split = [6,0,4]
+            self.split = [6,0,14]
         elif self.upgrades_done and self.tech_done:
             self.split = [2,0,30]
         else:
@@ -1521,6 +1532,24 @@ class selector_fake_production_ratio_controller(BTZSelector):
         self.unit_type_two = unit_type_two
         self.unit_ratio = unit_ratio
         self.name = self.name + " Fake Production Ratio Controller"
+
+class selector_less_gas_zergling(BTZSelector):
+    
+    vespene = 0
+    def decide(self):
+        if BTZN().blackboard["obs"].observation.player.vespene >= self.vespene :
+            self.decision = 0 ## produce desired unit type unit type
+        else:
+            self.decision = 1 ## produce zerglings
+
+        
+
+    def __init__(self, decendant, vespene):
+        self.vespene = vespene
+        self.children = decendant
+        self.name = self.name + " Less Gas Zergling"
+        
+
         
 class decorator_print_army(BTZDecorator):
     def execute(self):
@@ -1610,8 +1639,10 @@ class selector_any_scouts(BTZSelector):
 
 class leaf_select_unit_for_scouting(BTZLeaf):
     def execute(self):
-        overlord = random.choice(get_units_by_type((BTZN().blackboard["obs"]), self.scout))
-        BTZN().blackboard["action"] = actions.FUNCTIONS.select_point("select", (overlord.x, overlord.y))
+        if(len(get_units_by_type(self, units.Zerg.Overlord)) > 0):
+           overlord = random.choice(get_units_by_type((BTZN().blackboard["obs"]), self.scout))
+           if overlord.x >= 0 and overlord.y >=0 and overlord.x <84 and overlord.y <84:
+               BTZN().blackboard["action"] = actions.FUNCTIONS.select_point("select", (overlord.x, overlord.y))
 
     def __init__(self, scout=units.Zerg.Overlord):
         self.scout = scout
@@ -1754,7 +1785,7 @@ class King_NN(BTZSmartSelector):
         if self.decree_time >= 15:
             self.decree_time = 0
             #print("Decree count = ", end = "")
-            print(self.decree_count)
+            #print(self.decree_count)
             if self.decree_count < 20:
                 self.decision = 0 #opening
                 self.decree_count += 1
@@ -1778,8 +1809,8 @@ class King_NN(BTZSmartSelector):
                 self.previous_action = action -1
                 self.previous_state = self.current_state
 
-            print("Aspect = ", end = "")
-            print( BTZN().blackboard["Aspect"])
+            #print("Aspect = ", end = "")
+           # print( BTZN().blackboard["Aspect"])
 
         else:
             self.decree_time += 1

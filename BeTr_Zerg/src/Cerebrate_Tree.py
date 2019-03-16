@@ -181,31 +181,37 @@ class CerebrateTree(object):
         
         trn_muta = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_mutalisk()])
         muta_OL = selector_supply([trn_OL, trn_muta])
+        muta_z = selector_less_gas_zergling([muta_OL, ling_OL], 100)
+        
         
         trn_hydra = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_hydralisk()])
         hydra_OL = selector_supply([trn_OL, trn_hydra])
+        hydra_z = selector_less_gas_zergling([hydra_OL, ling_OL], 50)
         
         trn_ruptor = BTZSequence([leaf_select_unit_all(units.Zerg.Larva),leaf_train_corruptor()])
         ruptor_OL = selector_supply([trn_OL, trn_ruptor])
+        ruptor_z = selector_less_gas_zergling([ruptor_OL, ling_OL], 100)
+        
+        roach_z = selector_less_gas_zergling([rch_OL, ling_OL], 25)
         
         
         ##print_army = 
         
         """ LING_MUTA """
-        lm_production = BTZSequence([queen_upkeep, selector_production_ratio_controller([ling_OL,muta_OL], "105", "108", 2)])
+        lm_production = BTZSequence([queen_upkeep, selector_production_ratio_controller([ling_OL,muta_z], "105", "108", 2)])
         lm_upgrades = selector_upgrade_progression_LM([mb_u_sel_seq, ga_u_sel_seq, aa_u_sel_seq, gm_u_sel_seq, ar_u_sel_seq, nop])
         lm_tech = selector_tech_progression_LM([sp_make,evo_make,lair_make,spire_make,decorator_tech_check([nop])])
         LING_MUTA = selector_build_progression([lm_tech,lm_upgrades,lm_production])
         
         
         """ ROACH_HYDRA """
-        rh_production = BTZSequence([queen_upkeep,selector_production_ratio_controller([rch_OL,hydra_OL], "110", "107", 1)])
+        rh_production = BTZSequence([queen_upkeep,selector_production_ratio_controller([roach_z,hydra_z], "110", "107", 1)])
         rh_upgrades = selector_upgrade_progression_RH([ma_u_sel_seq, gs_u_sel_seq,ga_u_sel_seq,gr_u_sel_seq,nop])
         rh_tech = selector_tech_progression_RH([sp_make, rw_make, lair_make, evo_make, hd_make, decorator_tech_check([nop])])
         ROACH_HYDRA = selector_build_progression([rh_tech,rh_upgrades,rh_production])
         
         """ MUTA_RUPTOR """        
-        mr_production = BTZSequence([queen_upkeep,selector_production_ratio_controller([muta_OL,ruptor_OL], "108", "112", 3)])
+        mr_production = BTZSequence([queen_upkeep,selector_production_ratio_controller([muta_z,ruptor_z], "108", "112", 3)])
         mr_upgrades = selector_upgrade_progression_MR([ar_u_sel_seq,aa_u_sel_seq,nop])
         mr_tech  = selector_tech_progression_MR([sp_make, lair_make, spire_make, decorator_tech_check([nop])])
         MUTA_RUPTOR = selector_build_progression([mr_tech,mr_upgrades,mr_production])

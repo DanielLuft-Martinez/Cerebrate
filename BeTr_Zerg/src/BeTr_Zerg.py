@@ -187,7 +187,7 @@ class BTZSelector(BTZN):
     def execute(self):
         self.decide()
         if self.decision in range(0,len(self.children)):
-            list(map(lambda x:x.printName(),[self.children[self.decision]]))
+        #    list(map(lambda x:x.printName(),[self.children[self.decision]]))
             
             list(map(lambda x:x.execute(),[self.children[self.decision]]))
             
@@ -250,12 +250,12 @@ class BTZSequence(BTZN):
         if self.next_child == 0:
             self.setup()
         if self.next_child in range(0,len(self.children)-1):
-            list(map(lambda x:x.printName(),[self.children[self.next_child]]))
+        #    list(map(lambda x:x.printName(),[self.children[self.next_child]]))
             list(map(lambda x:x.execute(),[self.children[self.next_child]]))
             self.next_child+=1
         else:
             BTZN().blackboard["Aspect_current_sequences"][BTZN().blackboard["Aspect"]] = self.previous_sequence
-            list(map(lambda x:x.printName(),[self.children[self.next_child]]))
+        #    list(map(lambda x:x.printName(),[self.children[self.next_child]]))
             list(map(lambda x:x.execute(),[self.children[self.next_child]]))
             self.next_child = 0
             
